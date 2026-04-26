@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GestiOK — Gestão Hóquei em Patins</title>
+<title>AP Minho — Gestão Hóquei em Patins</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -13,7 +13,7 @@
 body{font-family:var(--font);background:var(--gray-50);color:var(--gray-800);font-size:14px;line-height:1.5}
 button{font-family:var(--font);cursor:pointer}
 input,select,textarea{font-family:var(--font)}
-#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a0505 0%,#1A3A8B 50%,#F5C400 100%);padding:20px}
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--login-bg1,#1a0505) 0%,var(--login-bg2,#1A3A8B) 50%,var(--login-bg3,#F5C400) 100%);padding:20px}
 .login-card{background:#fff;border-radius:20px;padding:40px 36px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center}
 .login-logo{font-size:52px;margin-bottom:8px}
 .login-title{font-size:20px;font-weight:600;color:var(--gray-900)}
@@ -440,6 +440,13 @@ textarea.form-input{resize:vertical;min-height:70px}
                 <span id="clube-cor-label" style="font-size:12px;color:var(--gray-500)">#1A3A8B</span>
               </div>
             </div>
+            <div class="form-group" style="margin-bottom:0;margin-top:10px">
+              <label class="form-label">Cor Secundária <span style="font-size:11px;color:var(--gray-400)">(fundo do ecrã de login)</span></label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="color" id="clube-cor2-inp" value="#F5C400" style="width:48px;height:38px;border:1px solid var(--gray-200);border-radius:8px;cursor:pointer;padding:2px">
+                <span id="clube-cor2-label" style="font-size:12px;color:var(--gray-500)">#F5C400</span>
+              </div>
+            </div>
           </div>
           <div class="form-group" style="margin-bottom:12px">
             <label class="form-label">Logótipo do Clube</label>
@@ -678,8 +685,8 @@ textarea.form-input{resize:vertical;min-height:70px}
 
 <script>
 // ═══ SUPABASE ═══
-const SUPABASE_URL = 'https://gqtzgipgnerfflddjcni.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_T2M1VwAZoRroTAFu7z7RJg_Ysr3n0p0';
+const SUPABASE_URL = 'https://aodxgrqxqgwbxgemtssr.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_2G71cjcvL3qCSja4oRap8g_BBdInfUK';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ═══ CONSTANTS ═══
@@ -785,6 +792,7 @@ async function loadAllData(){
       if(c.key==='profiles'){try{const ps=JSON.parse(c.value);if(Array.isArray(ps)&&ps.length>0){profiles.length=0;ps.forEach(p=>profiles.push({...p,licenca:p.licenca||'',cont:p.cont||''}));}}catch(e){}}
       if(c.key==='clube_nome')DB.config.clube_nome=c.value;
       if(c.key==='clube_cor')DB.config.clube_cor=c.value;
+      if(c.key==='clube_cor2')DB.config.clube_cor2=c.value;
       if(c.key==='clube_logo')DB.config.clube_logo=c.value;
     });
     // Seed jogadores if empty
@@ -2746,14 +2754,19 @@ async function deleteTreino(id){
 function renderAdminIdentidade(){
   const nome=DB.config.clube_nome||'AP Minho';
   const cor=DB.config.clube_cor||'#1A3A8B';
+  const cor2=DB.config.clube_cor2||'#F5C400';
   const logo=DB.config.clube_logo||null;
   const nomeInp=document.getElementById('clube-nome-inp');
   const corInp=document.getElementById('clube-cor-inp');
   const corLabel=document.getElementById('clube-cor-label');
+  const cor2Inp=document.getElementById('clube-cor2-inp');
+  const cor2Label=document.getElementById('clube-cor2-label');
   const preview=document.getElementById('clube-logo-preview');
   if(nomeInp)nomeInp.value=nome;
   if(corInp){corInp.value=cor;corInp.addEventListener('input',()=>{if(corLabel)corLabel.textContent=corInp.value;});}
   if(corLabel)corLabel.textContent=cor;
+  if(cor2Inp){cor2Inp.value=cor2;cor2Inp.addEventListener('input',()=>{if(cor2Label)cor2Label.textContent=cor2Inp.value;});}
+  if(cor2Label)cor2Label.textContent=cor2;
   if(preview&&logo){preview.src=logo;preview.style.display='block';}
 }
 
@@ -2771,11 +2784,14 @@ function onClubeLogo(input){
 async function saveIdentidadeClube(){
   const nome=document.getElementById('clube-nome-inp').value.trim()||'AP Minho';
   const cor=document.getElementById('clube-cor-inp').value||'#1A3A8B';
+  const cor2=document.getElementById('clube-cor2-inp')?.value||'#F5C400';
   const logo=window._clubeLogoB64||DB.config.clube_logo||null;
   showLoading(true);
   // Guardar na config
   await sb.from('config').upsert({key:'clube_nome',value:nome});
   await sb.from('config').upsert({key:'clube_cor',value:cor});
+  await sb.from('config').upsert({key:'clube_cor2',value:cor2});
+  DB.config.clube_cor2=cor2;
   if(logo) await sb.from('config').upsert({key:'clube_logo',value:logo});
   DB.config.clube_nome=nome;
   DB.config.clube_cor=cor;
@@ -2792,8 +2808,12 @@ function aplicarIdentidadeClube(){
   const logo=DB.config.clube_logo||null;
   // Aplicar cor CSS
   document.documentElement.style.setProperty('--red',cor);
-  // Calcular cor escura (para hover/dark)
+  // Calcular cor escura para hover/dark (adiciona 20% de escuridão)
   document.documentElement.style.setProperty('--red-dark',cor);
+  // Aplicar cor ao fundo do login (gradiente dinâmico baseado na cor do clube)
+  document.documentElement.style.setProperty('--login-bg1','#0a0a0a');
+  document.documentElement.style.setProperty('--login-bg2',cor);
+  document.documentElement.style.setProperty('--login-bg3',DB.config.clube_cor2||cor);
   // Nome do clube no header
   document.querySelectorAll('.clube-nome').forEach(el=>el.textContent=nome);
   const placardEl=document.getElementById('placard-clube-nome');
