@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AP Minho — Gestão Hóquei em Patins</title>
+<title>GestiOK — Gestão Hóquei em Patins</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -440,13 +440,7 @@ textarea.form-input{resize:vertical;min-height:70px}
                 <span id="clube-cor-label" style="font-size:12px;color:var(--gray-500)">#1A3A8B</span>
               </div>
             </div>
-            <div class="form-group" style="margin-bottom:0;margin-top:10px">
-              <label class="form-label">Cor Secundária <span style="font-size:11px;color:var(--gray-400)">(fundo do ecrã de login)</span></label>
-              <div style="display:flex;gap:8px;align-items:center">
-                <input type="color" id="clube-cor2-inp" value="#F5C400" style="width:48px;height:38px;border:1px solid var(--gray-200);border-radius:8px;cursor:pointer;padding:2px">
-                <span id="clube-cor2-label" style="font-size:12px;color:var(--gray-500)">#F5C400</span>
-              </div>
-            </div>
+
           </div>
           <div class="form-group" style="margin-bottom:12px">
             <label class="form-label">Logótipo do Clube</label>
@@ -685,8 +679,8 @@ textarea.form-input{resize:vertical;min-height:70px}
 
 <script>
 // ═══ SUPABASE ═══
-const SUPABASE_URL = 'https://aodxgrqxqgwbxgemtssr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_2G71cjcvL3qCSja4oRap8g_BBdInfUK';
+const SUPABASE_URL = 'https://gqtzgipgnerfflddjcni.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_T2M1VwAZoRroTAFu7z7RJg_Ysr3n0p0';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ═══ CONSTANTS ═══
@@ -2811,9 +2805,10 @@ function aplicarIdentidadeClube(){
   // Calcular cor escura para hover/dark (adiciona 20% de escuridão)
   document.documentElement.style.setProperty('--red-dark',cor);
   // Aplicar cor ao fundo do login (gradiente dinâmico baseado na cor do clube)
+  // Fundo do login: tom escuro → cor principal → tom mais claro (automático)
   document.documentElement.style.setProperty('--login-bg1','#0a0a0a');
   document.documentElement.style.setProperty('--login-bg2',cor);
-  document.documentElement.style.setProperty('--login-bg3',DB.config.clube_cor2||cor);
+  document.documentElement.style.setProperty('--login-bg3',cor);
   // Nome do clube no header
   document.querySelectorAll('.clube-nome').forEach(el=>el.textContent=nome);
   const placardEl=document.getElementById('placard-clube-nome');
