@@ -159,6 +159,28 @@ textarea.form-input{resize:vertical;min-height:70px}
 .sync-indicator{position:fixed;top:60px;right:16px;background:var(--green);color:#fff;font-size:11px;padding:4px 10px;border-radius:20px;z-index:100;opacity:0;transition:opacity .3s}
 .sync-indicator.show{opacity:1}
 @media(max-width:700px){.sidebar{display:none}.card-2col{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}.swot-grid{grid-template-columns:1fr}}
+/* ── Metodologia ── */
+.met-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.met-secoes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.met-card{background:#fff;border-radius:var(--radius-lg);border:1px solid var(--gray-100);box-shadow:var(--shadow);overflow:hidden;transition:box-shadow .2s}
+.met-card:hover{box-shadow:var(--shadow-md)}
+.met-card-header{padding:14px 16px 10px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.met-card-emoji{font-size:26px;flex-shrink:0}
+.met-card-info{flex:1}
+.met-card-title{font-size:13px;font-weight:600;color:var(--gray-900);margin-bottom:2px}
+.met-card-cat{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px}
+.met-card-body{padding:0 16px 14px;font-size:12px;color:var(--gray-600);line-height:1.6;white-space:pre-wrap}
+.met-card-footer{padding:8px 16px;border-top:1px solid var(--gray-100);display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--gray-400)}
+.met-hero{background:linear-gradient(135deg,var(--red-dark),var(--red));border-radius:var(--radius-lg);padding:20px 24px;color:#fff;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.met-hero-title{font-size:17px;font-weight:700;margin-bottom:4px}
+.met-hero-sub{font-size:12px;opacity:.8}
+.met-hero-badge{background:rgba(255,255,255,.15);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;white-space:nowrap}
+.met-empty{text-align:center;padding:48px 20px;color:var(--gray-400)}
+.met-empty-icon{font-size:42px;margin-bottom:10px}
+.met-cat-label{background:var(--red-light);color:var(--red);border:1px solid rgba(139,26,26,.15)}
+.met-cat-modelo{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE}
+.met-cat-exercicio{background:#F0FDF4;color:#166534;border:1px solid #BBF7D0}
+.met-cat-filosofia{background:var(--gold-light);color:#92400E;border:1px solid #FCD34D}
 </style>
 </head>
 <body>
@@ -214,6 +236,7 @@ textarea.form-input{resize:vertical;min-height:70px}
       <div class="nav-item" data-page="jogadores"><span class="nav-icon">👥</span>Jogadores</div>
       <div class="nav-item" data-page="sessoes"><span class="nav-icon">📅</span>Sessões</div>
       <div class="nav-item" data-page="treinos"><span class="nav-icon">📋</span>Treinos</div>
+      <div class="nav-item" data-page="metodologia"><span class="nav-icon">📚</span>Metodologia</div>
       <div class="nav-section">Análise</div>
       <div class="nav-item" data-page="ficha"><span class="nav-icon">📋</span>Ficha Individual</div>
       <div class="nav-item" data-page="avaliacao"><span class="nav-icon">⭐</span>Avaliação Técnica</div>
@@ -309,6 +332,22 @@ textarea.form-input{resize:vertical;min-height:70px}
         </div>
         <div class="grupo-tabs" id="treinos-gtabs"></div>
         <div id="treinos-list"></div>
+      </div>
+
+      <div id="page-metodologia" class="page">
+        <div class="page-header">
+          <div><div class="page-title">Metodologia de Treino</div><div class="page-sub">Modelo de jogo · Exercícios base · Filosofia do clube</div></div>
+          <button class="btn btn-primary coord-only" id="btn-nova-met" style="display:none" onclick="openModalMetodologia()">+ Nova Secção</button>
+        </div>
+        <div class="met-hero">
+          <div>
+            <div class="met-hero-title">🏒 CP Monção — Hóquei em Patins</div>
+            <div class="met-hero-sub">Partilha de conhecimento entre todos os treinadores do clube</div>
+          </div>
+          <div class="met-hero-badge" id="met-hero-count">A carregar…</div>
+        </div>
+        <div class="met-tabs" id="met-tabs"></div>
+        <div id="met-content"></div>
       </div>
 
       <div id="page-relatorio" class="page">
@@ -676,6 +715,46 @@ textarea.form-input{resize:vertical;min-height:70px}
 
 
 
+<div id="modal-metodologia" class="modal-bg">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header"><span class="modal-title" id="modal-met-title">Nova Secção</span><button class="modal-close" onclick="closeModal('modal-metodologia')">✕</button></div>
+    <input type="hidden" id="met-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Emoji / Ícone</label><input type="text" class="form-input" id="met-emoji" placeholder="🏒" maxlength="4" style="font-size:22px;text-align:center"></div>
+      <div class="form-group"><label class="form-label">Categoria</label>
+        <select class="form-input" id="met-categoria">
+          <option value="metodologia">📋 Metodologia</option>
+          <option value="modelo">🎯 Modelo de Jogo</option>
+          <option value="exercicio">💪 Exercícios Base</option>
+          <option value="filosofia">💡 Filosofia do Clube</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px"><label class="form-label">Título</label><input type="text" class="form-input" id="met-titulo" placeholder="ex: Princípios defensivos"></div>
+    <div class="form-group" style="margin-bottom:10px"><label class="form-label">Conteúdo</label><textarea class="form-input" id="met-conteudo" style="min-height:120px;resize:vertical" placeholder="Descreve o conteúdo desta secção…"></textarea></div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label class="form-label">Ficheiro (PDF, imagem ou câmara)</label>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <label class="btn" style="cursor:pointer;flex:1;text-align:center">
+          📄 PDF / Imagem
+          <input type="file" id="met-file-input" accept="image/*,application/pdf" style="display:none" onchange="onMetFile(this)">
+        </label>
+        <label class="btn" style="cursor:pointer;flex:1;text-align:center">
+          📷 Câmara
+          <input type="file" id="met-cam-input" accept="image/*" capture="environment" style="display:none" onchange="onMetFile(this)">
+        </label>
+      </div>
+      <div id="met-file-preview" style="font-size:12px;color:var(--gray-500)"></div>
+      <div id="met-file-current" style="font-size:11px;color:var(--gray-400);margin-top:4px"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveMetodologia()">💾 Guardar</button>
+      <button class="btn" onclick="closeModal('modal-metodologia')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+
 </head>
 <body>
 
@@ -748,7 +827,7 @@ async function loadAllData(){
   _loadingData = true;
   showLoading(true);
   try {
-    const [jogsR, sessR, avalR, cfgR, jogosR, delegR, treinosR] = await Promise.all([
+    const [jogsR, sessR, avalR, cfgR, jogosR, delegR, treinosR, metR] = await Promise.all([
       sb.from('jogadores').select('*').order('nome'),
       sb.from('sessoes').select('*').order('data',{ascending:false}),
       sb.from('avaliacoes').select('*'),
@@ -756,6 +835,7 @@ async function loadAllData(){
       sb.from('jogos').select('*').order('data',{ascending:false}),
       sb.from('delegados').select('*'),
       sb.from('treinos').select('*').order('data',{ascending:false}),
+      sb.from('metodologia').select('*').order('criado_em',{ascending:false}),
     ]);
     // Deduplicate jogadores by id (fix for repeated players bug)
     const rawJogs = jogsR.data || [];
@@ -785,6 +865,7 @@ async function loadAllData(){
     DB.jogos = jogosR.data || [];
     DB.delegados = delegR?.data || [];
     DB.treinos = treinosR?.data || [];
+    DB.metodologia = metR?.data || [];
     // Config
     (cfgR.data||[]).forEach(c=>{
       if(c.key==='pins') DB.config.pins=JSON.parse(c.value);
@@ -936,7 +1017,7 @@ document.querySelectorAll('.nav-item[data-page]').forEach(el=>{
   });
 });
 function renderPage(p){
-  const map={dashboard:renderDashboard,presencas:renderPresencas,jogadores:renderJogadores,sessoes:renderSessoes,ficha:renderFichaPage,avaliacao:renderAvaliacao,relatorio:renderRelatorio,convocatoria:renderConvocatoria,jogo:renderJogoAoVivo,admin:renderAdmin,treinos:renderTreinos};
+  const map={dashboard:renderDashboard,presencas:renderPresencas,jogadores:renderJogadores,sessoes:renderSessoes,ficha:renderFichaPage,avaliacao:renderAvaliacao,relatorio:renderRelatorio,convocatoria:renderConvocatoria,jogo:renderJogoAoVivo,admin:renderAdmin,treinos:renderTreinos,metodologia:renderMetodologia};
   if(map[p])map[p]();
 }
 function buildGrupoTabs(cid,pageKey){
@@ -2749,6 +2830,186 @@ async function deleteTreino(id){
   DB.treinos=(DB.treinos||[]).filter(x=>x.id!==id);
   toast('🗑️ Unidade apagada');
   renderTreinos();
+}
+
+// ═══ METODOLOGIA ═══
+let currentMetCat = 'todas';
+let metFileB64 = null;
+let metFileMime = null;
+let metFileRemoved = false;
+
+const MET_CATS = {
+  todas:      {label:'Todas',        emoji:'📚', cls:''},
+  metodologia:{label:'Metodologia',  emoji:'📋', cls:'met-cat-label'},
+  modelo:     {label:'Modelo de Jogo',emoji:'🎯', cls:'met-cat-modelo'},
+  exercicio:  {label:'Exercícios Base',emoji:'💪',cls:'met-cat-exercicio'},
+  filosofia:  {label:'Filosofia',    emoji:'💡', cls:'met-cat-filosofia'},
+};
+
+function renderMetodologia(){
+  const isCoord=!currentUser?.grupos;
+  const btnNova=document.getElementById('btn-nova-met');
+  if(btnNova) btnNova.style.display=isCoord?'inline-flex':'none';
+  const lista=DB.metodologia||[];
+  const heroCount=document.getElementById('met-hero-count');
+  if(heroCount) heroCount.textContent=lista.length+' secç'+(lista.length===1?'ão':'ões');
+  const tabsEl=document.getElementById('met-tabs');
+  if(tabsEl){
+    tabsEl.innerHTML=Object.entries(MET_CATS).map(([k,v])=>{
+      const cnt=k==='todas'?lista.length:lista.filter(x=>x.categoria===k).length;
+      return`<div class="gtab ${currentMetCat===k?'active':''}" onclick="setMetCat('${k}')">${v.emoji} ${v.label} <span style="opacity:.7;font-size:11px">(${cnt})</span></div>`;
+    }).join('');
+  }
+  const filtered=currentMetCat==='todas'?lista:lista.filter(x=>x.categoria===currentMetCat);
+  const el=document.getElementById('met-content');
+  if(!el)return;
+  if(!filtered.length){
+    el.innerHTML=`<div class="met-empty"><div class="met-empty-icon">${currentMetCat==='todas'?'📚':MET_CATS[currentMetCat]?.emoji||'📋'}</div><div class="empty-state-text">${isCoord?'Ainda sem conteúdo. Clica em "+ Nova Secção" para começar.':'Ainda sem conteúdo nesta categoria.'}</div></div>`;
+    return;
+  }
+  el.innerHTML=`<div class="met-secoes-grid">${filtered.map(s=>{
+    const cat=MET_CATS[s.categoria]||MET_CATS.metodologia;
+    const data=s.criado_em?new Date(s.criado_em).toLocaleDateString('pt-PT'):'—';
+    const editBtns=isCoord?`<div style="display:flex;gap:4px">
+      <button class="btn btn-sm" onclick="openModalMetodologia('${s.id}')" style="color:#2563EB;border-color:#BFDBFE">✏️</button>
+      <button class="btn btn-sm" onclick="deleteMetodologia('${s.id}')" style="color:#DC2626;border-color:#FCA5A5">🗑️</button>
+    </div>`:'';
+    return`<div class="met-card">
+      <div class="met-card-header">
+        <span class="met-card-emoji">${s.emoji||cat.emoji}</span>
+        <div class="met-card-info">
+          <div class="met-card-title">${s.titulo||'Sem título'}</div>
+          <span class="met-card-cat badge ${cat.cls}">${cat.emoji} ${cat.label}</span>
+        </div>
+        ${editBtns}
+      </div>
+      ${s.conteudo?`<div class="met-card-body">${s.conteudo}</div>`:''}
+      ${s.ficheiro_url&&s.ficheiro_mime&&s.ficheiro_mime.startsWith('image/')?
+        `<div style="padding:0 16px 12px"><img src="${s.ficheiro_url}" style="width:100%;max-height:220px;object-fit:contain;border-radius:8px;background:var(--gray-50)" alt="${s.titulo}"></div>`:
+        s.ficheiro_url?`<div style="padding:0 16px 12px"><button class="btn btn-sm" onclick="window.open('${s.ficheiro_url}','_blank')" style="color:#2563EB;border-color:#BFDBFE">👁 Ver PDF</button></div>`:''}
+      <div class="met-card-footer">
+        <span>📅 ${data}</span>
+        <span>${s.autor||''}</span>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function setMetCat(cat){
+  currentMetCat=cat;
+  renderMetodologia();
+}
+
+function onMetFile(input){
+  const file=input.files[0];if(!file)return;
+  const preview=document.getElementById('met-file-preview');
+  preview.textContent='A carregar...';
+  const reader=new FileReader();
+  reader.onload=e=>{
+    metFileB64=e.target.result;
+    metFileMime=file.type;
+    metFileRemoved=false;
+    if(file.type.startsWith('image/')){
+      preview.innerHTML=`<img src="${metFileB64}" style="max-width:100%;max-height:160px;border-radius:6px;margin-top:4px"><div style="margin-top:4px;color:var(--gray-500)">${file.name}</div>`;
+    } else {
+      preview.innerHTML=`<div style="padding:8px;background:var(--gray-50);border-radius:6px;margin-top:4px">📄 ${file.name}</div>`;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeMetFicheiro(){
+  metFileRemoved=true;
+  metFileB64=null;metFileMime=null;
+  document.getElementById('met-file-current').innerHTML='<span style="font-size:11px;color:#DC2626">Ficheiro será removido ao guardar</span>';
+  document.getElementById('met-file-preview').innerHTML='';
+  document.getElementById('met-file-input').value='';
+  document.getElementById('met-cam-input').value='';
+}
+
+function openModalMetodologia(id){
+  const isCoord=!currentUser?.grupos;
+  if(!isCoord){toast('Apenas o coordenador pode editar a metodologia.');return;}
+  const s=id?(DB.metodologia||[]).find(x=>x.id===id):null;
+  metFileB64=null;metFileMime=null;metFileRemoved=false;
+  document.getElementById('met-edit-id').value=id||'';
+  document.getElementById('modal-met-title').textContent=s?'Editar Secção':'Nova Secção';
+  document.getElementById('met-emoji').value=s?s.emoji||'':'';
+  document.getElementById('met-categoria').value=s?s.categoria||'metodologia':'metodologia';
+  document.getElementById('met-titulo').value=s?s.titulo||'':'';
+  document.getElementById('met-conteudo').value=s?s.conteudo||'':'';
+  document.getElementById('met-file-preview').innerHTML='';
+  document.getElementById('met-file-input').value='';
+  document.getElementById('met-cam-input').value='';
+  const cur=document.getElementById('met-file-current');
+  if(s&&s.ficheiro_url){
+    const preview=s.ficheiro_mime&&s.ficheiro_mime.startsWith('image/')?
+      `<img src="${s.ficheiro_url}" style="max-width:100%;max-height:120px;border-radius:6px;display:block;margin-bottom:6px">`:
+      `<div style="padding:6px 8px;background:var(--gray-50);border-radius:6px;margin-bottom:6px">📄 Ficheiro atual — <a href="${s.ficheiro_url}" target="_blank" style="color:var(--blue)">ver</a></div>`;
+    cur.innerHTML=preview+`<button class="btn btn-sm" style="color:#DC2626;border-color:#FCA5A5" onclick="removeMetFicheiro()">× Remover ficheiro</button>`;
+  } else { cur.innerHTML=''; }
+  openModal('modal-metodologia');
+}
+
+async function saveMetodologia(){
+  const isCoord=!currentUser?.grupos;
+  if(!isCoord){toast('Sem permissão.');return;}
+  const titulo=document.getElementById('met-titulo').value.trim();
+  if(!titulo){alert('Introduz um título para a secção');return;}
+  const emoji=document.getElementById('met-emoji').value.trim()||'📋';
+  const categoria=document.getElementById('met-categoria').value;
+  const conteudo=document.getElementById('met-conteudo').value.trim();
+  const editId=document.getElementById('met-edit-id').value;
+  showLoading(true);
+  let ficheiro_url=null,ficheiro_mime=null;
+  if(metFileB64){
+    try{
+      const base64=metFileB64.split(',')[1];
+      const byteStr=atob(base64);
+      const arr=new Uint8Array(byteStr.length);
+      for(let i=0;i<byteStr.length;i++)arr[i]=byteStr.charCodeAt(i);
+      const blob=new Blob([arr],{type:metFileMime});
+      const ext=metFileMime==='application/pdf'?'pdf':metFileMime.split('/')[1]||'jpg';
+      const path='metodologia/'+uid()+'.'+ext;
+      const {data:upData,error:upErr}=await sb.storage.from('Treinos').upload(path,blob,{contentType:metFileMime,upsert:false});
+      if(!upErr){
+        const {data:urlData}=sb.storage.from('Treinos').getPublicUrl(path);
+        ficheiro_url=urlData.publicUrl;
+        ficheiro_mime=metFileMime;
+      } else {
+        console.warn('Upload erro:',upErr.message);
+        toast('⚠️ Erro ao carregar ficheiro: '+upErr.message);
+      }
+    }catch(err){console.warn('Upload err:',err);}
+  }
+  if(editId){
+    const existing=(DB.metodologia||[]).find(x=>x.id===editId);
+    const rec={titulo,emoji,categoria,conteudo,
+      ficheiro_url: metFileRemoved ? null : (ficheiro_url!==null ? ficheiro_url : (existing?.ficheiro_url||null)),
+      ficheiro_mime: metFileRemoved ? null : (ficheiro_mime!==null ? ficheiro_mime : (existing?.ficheiro_mime||null))
+    };
+    await sb.from('metodologia').update(rec).eq('id',editId);
+    const idx=(DB.metodologia||[]).findIndex(x=>x.id===editId);
+    if(idx>=0) DB.metodologia[idx]={...DB.metodologia[idx],...rec};
+  } else {
+    const rec={id:uid(),titulo,emoji,categoria,conteudo,ficheiro_url,ficheiro_mime,autor:currentUser?.name||'Coordenador',criado_em:new Date().toISOString()};
+    await sb.from('metodologia').insert(rec);
+    DB.metodologia=DB.metodologia||[];
+    DB.metodologia.unshift(rec);
+  }
+  showLoading(false);
+  closeModal('modal-metodologia');
+  toast('✅ Secção guardada!');
+  showSync();
+  renderMetodologia();
+}
+
+async function deleteMetodologia(id){
+  if(!confirm('Apagar esta secção?'))return;
+  await sb.from('metodologia').delete().eq('id',id);
+  DB.metodologia=(DB.metodologia||[]).filter(x=>x.id!==id);
+  toast('🗑️ Secção apagada');
+  renderMetodologia();
 }
 
 // ═══ IDENTIDADE DO CLUBE ═══
