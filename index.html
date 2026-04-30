@@ -575,6 +575,7 @@ textarea.form-input{resize:vertical;min-height:70px}
           <div><div class="page-title">Gestão de Sócios</div><div class="page-sub">Atletas e membros do clube</div></div>
           <div style="display:flex;gap:8px">
             <button class="btn btn-primary" onclick="openModalSocio()">+ Novo Sócio</button>
+            <label class="btn" style="cursor:pointer;background:#EFF6FF;color:#1E40AF;border-color:#BFDBFE">📥 Importar CSV<input type="file" accept=".csv" style="display:none" onchange="importarCSVSocios(this)"></label>
             <button class="btn" onclick="gerarPDFSocios()">📄 PDF</button>
           </div>
         </div>
@@ -859,6 +860,7 @@ textarea.form-input{resize:vertical;min-height:70px}
     <div class="modal-header"><span class="modal-title" id="modal-soc-title">Novo Sócio</span><button class="modal-close" onclick="closeModal('modal-socio')">✕</button></div>
     <input type="hidden" id="soc-edit-id">
     <div class="form-row">
+      <div class="form-group" style="max-width:140px"><label class="form-label">Nº Sócio</label><input type="text" class="form-input" id="soc-num" placeholder="ex: 123"></div>
       <div class="form-group" id="soc-nome-wrap"><label class="form-label">Nome</label><input type="text" class="form-input" id="soc-nome" placeholder="Nome completo"></div>
       <div class="form-group"><label class="form-label">Tipo</label>
         <select class="form-input" id="soc-tipo">
@@ -3534,6 +3536,72 @@ async function gerarPDFClinico(jid){
 }
 
 // ═══ SÓCIOS ═══
+// ═══ IMPORTAR CSV SÓCIOS ═══
+async function importarCSVSocios(input){
+  const file=input.files[0]; if(!file) return;
+  input.value='';
+  const text=await file.text();
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(!lines.length){toast('CSV vazio');return;}
+  // Detectar separador
+  const sep=lines[0].includes(';')?';':',';
+  const headers=lines[0].split(sep).map(h=>h.trim().toLowerCase().replace(/[^a-záàãâéêíóôõúüç0-9_]/gi,''));
+  const rows=lines.slice(1).filter(l=>l.trim());
+  // Tentar encontrar coluna nome e número
+  const iNome=headers.findIndex(h=>h.includes('nome')||h.includes('name'));
+  const iNum=headers.findIndex(h=>h.includes('num')||h.includes('n')||h.includes('socio')||h.includes('sócio')||h==='id');
+  if(iNome<0){toast('Coluna "nome" não encontrada no CSV');return;}
+  // Preparar preview
+  const preview=rows.slice(0,5).map(r=>{
+    const cols=r.split(sep).map(c=>c.trim().replace(/^"|"$/g,''));
+    return {nome:cols[iNome]||'',num:iNum>=0?cols[iNum]||'':''};
+  });
+  const total=rows.length;
+  const existentes=(DB.socios||[]).map(s=>s.nome?.toLowerCase());
+  const novos=rows.filter(r=>{
+    const cols=r.split(sep).map(c=>c.trim().replace(/^"|"$/g,''));
+    return cols[iNome]&&!existentes.includes(cols[iNome].toLowerCase());
+  });
+  // Mostrar modal de confirmação
+  const div=document.createElement('div');
+  div.id='modal-csv-preview';
+  div.className='modal-bg';
+  div.style.display='flex';
+  div.innerHTML=`<div class="modal" style="max-width:480px">
+    <div class="modal-header"><span class="modal-title">📥 Importar CSV — Sócios</span></div>
+    <div style="font-size:13px;margin-bottom:12px">
+      <div style="display:flex;gap:16px;margin-bottom:12px">
+        <div class="metric-card" style="flex:1;padding:10px;text-align:center"><div class="metric-label">Total no CSV</div><div class="metric-value">${total}</div></div>
+        <div class="metric-card" style="flex:1;padding:10px;text-align:center"><div class="metric-label">Já existem</div><div class="metric-value" style="color:#92400E">${total-novos.length}</div></div>
+        <div class="metric-card" style="flex:1;padding:10px;text-align:center"><div class="metric-label">A importar</div><div class="metric-value" style="color:#065F46">${novos.length}</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--gray-500);margin-bottom:8px">Pré-visualização (primeiros ${Math.min(5,preview.length)}):</div>
+      <table class="tbl" style="font-size:11px"><thead><tr><th>Nº</th><th>Nome</th><th>Estado</th><th>Quota</th></tr></thead><tbody>
+        ${preview.map(p=>`<tr><td>${p.num||'—'}</td><td>${p.nome}</td><td><span class="badge badge-ok">Activo</span></td><td><span class="badge badge-warn">Em Falta</span></td></tr>`).join('')}
+      </tbody></table>
+      <div style="font-size:11px;color:var(--gray-400);margin-top:8px">Valores por defeito: Estado=Activo · Quota=Em Falta · Tipo=Externo<br>Duplicados (pelo nome) são ignorados automaticamente.</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="confirmarImportCSV(${JSON.stringify(novos.map(r=>{const cols=r.split(sep).map(c=>c.trim().replace(/^"|"$/g,''));return{nome:cols[iNome]||'',num:iNum>=0?cols[iNum]||'':''};}).filter(x=>x.nome))})">✅ Importar ${novos.length} sócios</button>
+      <button class="btn" onclick="document.getElementById('modal-csv-preview').remove()">Cancelar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(div);
+}
+async function confirmarImportCSV(registos){
+  document.getElementById('modal-csv-preview')?.remove();
+  if(!registos.length){toast('Nada a importar');return;}
+  toast('⏳ A importar...');
+  let ok=0,err=0;
+  for(const r of registos){
+    const rec={nome:r.nome,num_socio:r.num||null,tipo:'externo',estado:'Activo',quota:'Em falta',periodo:'anual',valor:null,ultimo_pag:null,contacto:null,obs:null};
+    const {error}=await sb.from('socios').insert(rec);
+    if(error) err++; else {ok++;DB.socios=DB.socios||[];DB.socios.push(rec);}
+  }
+  toast(`✅ ${ok} sócios importados${err?` · ${err} erros`:''}!`);
+  renderSocios();
+}
+
 function renderSocios(){
   const isCoord=!currentUser?.grupos;
   // Mostrar/ocultar nav
@@ -3606,6 +3674,7 @@ function openModalSocio(id){
   const s=id?(DB.socios||[]).find(x=>x.id===id):null;
   document.getElementById('soc-edit-id').value=id||'';
   document.getElementById('modal-soc-title').textContent=s?'Editar Sócio':'Novo Sócio';
+  document.getElementById('soc-num').value=s?s.num_socio||'':'';
   document.getElementById('soc-nome').value=s?s.nome||'':'';
   document.getElementById('soc-tipo').value=s?s.tipo||'atleta':'atleta';
   document.getElementById('soc-estado').value=s?s.estado||'Activo':'Activo';
@@ -3652,6 +3721,7 @@ async function saveSocio(){
     ultimo_pag:document.getElementById('soc-ultimo-pag').value||null,
     contacto:document.getElementById('soc-contacto').value.trim()||null,
     obs:document.getElementById('soc-obs').value.trim()||null,
+    num_socio:document.getElementById('soc-num').value.trim()||null,
   };
   showLoading(true);
   const editId=document.getElementById('soc-edit-id').value;
