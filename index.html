@@ -3537,43 +3537,36 @@ async function gerarPDFClinico(jid){
 
 // ═══ SÓCIOS ═══
 // ═══ IMPORTAR CSV SÓCIOS ═══
+let _csvPendente=[];
 async function importarCSVSocios(input){
   const file=input.files[0]; if(!file) return;
   input.value='';
-  const text=await file.text();
+  // Ler com Latin-1 para suportar ficheiros exportados do Excel/Windows
+  const buffer=await file.arrayBuffer();
+  const text=new TextDecoder('windows-1252').decode(buffer);
   const lines=text.split(/\r?\n/).filter(l=>l.trim());
   if(!lines.length){toast('CSV vazio');return;}
-  // Detectar separador
   const sep=lines[0].includes(';')?';':',';
-  const headers=lines[0].split(sep).map(h=>h.trim().toLowerCase().replace(/[^a-záàãâéêíóôõúüç0-9_]/gi,''));
+  const headers=lines[0].split(sep).map(h=>h.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/gi,''));
   const rows=lines.slice(1).filter(l=>l.trim());
-  // Tentar encontrar coluna nome e número
   const iNome=headers.findIndex(h=>h.includes('nome')||h.includes('name'));
-  const iNum=headers.findIndex(h=>h.includes('num')||h.includes('n')||h.includes('socio')||h.includes('sócio')||h==='id');
+  const iNum=headers.findIndex(h=>h.includes('num')||h.includes('n')||h==='id'||h===''||h.includes('socio'));
   if(iNome<0){toast('Coluna "nome" não encontrada no CSV');return;}
-  // Preparar preview
-  const preview=rows.slice(0,5).map(r=>{
-    const cols=r.split(sep).map(c=>c.trim().replace(/^"|"$/g,''));
-    return {nome:cols[iNome]||'',num:iNum>=0?cols[iNum]||'':''};
-  });
+  const parse=r=>r.split(sep).map(c=>c.trim().replace(/^"|"$/g,''));
+  const existentes=(DB.socios||[]).map(s=>(s.nome||'').toLowerCase().trim());
+  _csvPendente=rows.map(r=>{const cols=parse(r);return{nome:cols[iNome]||'',num:iNum>=0?cols[iNum]||'':''};})
+    .filter(x=>x.nome&&!existentes.includes(x.nome.toLowerCase().trim()));
   const total=rows.length;
-  const existentes=(DB.socios||[]).map(s=>s.nome?.toLowerCase());
-  const novos=rows.filter(r=>{
-    const cols=r.split(sep).map(c=>c.trim().replace(/^"|"$/g,''));
-    return cols[iNome]&&!existentes.includes(cols[iNome].toLowerCase());
-  });
-  // Mostrar modal de confirmação
+  const preview=_csvPendente.slice(0,5);
   const div=document.createElement('div');
-  div.id='modal-csv-preview';
-  div.className='modal-bg';
-  div.style.display='flex';
+  div.id='modal-csv-preview';div.className='modal-bg';div.style.display='flex';
   div.innerHTML=`<div class="modal" style="max-width:480px">
     <div class="modal-header"><span class="modal-title">📥 Importar CSV — Sócios</span></div>
     <div style="font-size:13px;margin-bottom:12px">
       <div style="display:flex;gap:16px;margin-bottom:12px">
         <div class="metric-card" style="flex:1;padding:10px;text-align:center"><div class="metric-label">Total no CSV</div><div class="metric-value">${total}</div></div>
-        <div class="metric-card" style="flex:1;padding:10px;text-align:center"><div class="metric-label">Já existem</div><div class="metric-value" style="color:#92400E">${total-novos.length}</div></div>
-        <div class="metric-card" style="flex:1;padding:10px;text-align:center"><div class="metric-label">A importar</div><div class="metric-value" style="color:#065F46">${novos.length}</div></div>
+        <div class="metric-card" style="flex:1;padding:10px;text-align:center"><div class="metric-label">Já existem</div><div class="metric-value" style="color:#92400E">${total-_csvPendente.length}</div></div>
+        <div class="metric-card" style="flex:1;padding:10px;text-align:center"><div class="metric-label">A importar</div><div class="metric-value" style="color:#065F46">${_csvPendente.length}</div></div>
       </div>
       <div style="font-size:11px;color:var(--gray-500);margin-bottom:8px">Pré-visualização (primeiros ${Math.min(5,preview.length)}):</div>
       <table class="tbl" style="font-size:11px"><thead><tr><th>Nº</th><th>Nome</th><th>Estado</th><th>Quota</th></tr></thead><tbody>
@@ -3582,22 +3575,23 @@ async function importarCSVSocios(input){
       <div style="font-size:11px;color:var(--gray-400);margin-top:8px">Valores por defeito: Estado=Activo · Quota=Em Falta · Tipo=Externo<br>Duplicados (pelo nome) são ignorados automaticamente.</div>
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" style="flex:1" onclick="confirmarImportCSV(${JSON.stringify(novos.map(r=>{const cols=r.split(sep).map(c=>c.trim().replace(/^"|"$/g,''));return{nome:cols[iNome]||'',num:iNum>=0?cols[iNum]||'':''};}).filter(x=>x.nome))})">✅ Importar ${novos.length} sócios</button>
+      <button class="btn btn-primary" style="flex:1" onclick="confirmarImportCSV()">✅ Importar ${_csvPendente.length} sócios</button>
       <button class="btn" onclick="document.getElementById('modal-csv-preview').remove()">Cancelar</button>
     </div>
   </div>`;
   document.body.appendChild(div);
 }
-async function confirmarImportCSV(registos){
+async function confirmarImportCSV(){
   document.getElementById('modal-csv-preview')?.remove();
-  if(!registos.length){toast('Nada a importar');return;}
+  if(!_csvPendente.length){toast('Nada a importar');return;}
   toast('⏳ A importar...');
   let ok=0,err=0;
-  for(const r of registos){
+  for(const r of _csvPendente){
     const rec={nome:r.nome,num_socio:r.num||null,tipo:'externo',estado:'Activo',quota:'Em falta',periodo:'anual',valor:null,ultimo_pag:null,contacto:null,obs:null};
     const {error}=await sb.from('socios').insert(rec);
-    if(error) err++; else {ok++;DB.socios=DB.socios||[];DB.socios.push(rec);}
+    if(error) err++; else {ok++;DB.socios=DB.socios||[];DB.socios.push({...rec});}
   }
+  _csvPendente=[];
   toast(`✅ ${ok} sócios importados${err?` · ${err} erros`:''}!`);
   renderSocios();
 }
