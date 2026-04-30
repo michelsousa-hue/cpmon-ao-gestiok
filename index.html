@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GestiOK — Gestão Hóquei em Patins</title>
+<title>CP Monção — Gestão Hóquei em Patins</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -859,7 +859,7 @@ textarea.form-input{resize:vertical;min-height:70px}
     <div class="modal-header"><span class="modal-title" id="modal-soc-title">Novo Sócio</span><button class="modal-close" onclick="closeModal('modal-socio')">✕</button></div>
     <input type="hidden" id="soc-edit-id">
     <div class="form-row">
-      <div class="form-group"><label class="form-label">Nome</label><input type="text" class="form-input" id="soc-nome" placeholder="Nome completo"></div>
+      <div class="form-group" id="soc-nome-wrap"><label class="form-label">Nome</label><input type="text" class="form-input" id="soc-nome" placeholder="Nome completo"></div>
       <div class="form-group"><label class="form-label">Tipo</label>
         <select class="form-input" id="soc-tipo">
           <option value="atleta">Atleta (ligado)</option>
@@ -3619,21 +3619,31 @@ function openModalSocio(id){
   const sel=document.getElementById('soc-atleta-id');
   sel.innerHTML='<option value="">— Escolher atleta —</option>'+(DB.jogadores||[]).map(j=>`<option value="${j.id}" ${s&&s.atleta_id===j.id?'selected':''}>${j.nome} (${j.sub})</option>`).join('');
   document.getElementById('soc-atleta-wrap').style.display=document.getElementById('soc-tipo').value==='atleta'?'block':'none';
-  document.getElementById('soc-tipo').onchange=function(){document.getElementById('soc-atleta-wrap').style.display=this.value==='atleta'?'block':'none';};
+  document.getElementById('soc-nome-wrap').style.display=document.getElementById('soc-tipo').value==='atleta'?'none':'block';
+  document.getElementById('soc-tipo').onchange=function(){
+    const isAtleta=this.value==='atleta';
+    document.getElementById('soc-atleta-wrap').style.display=isAtleta?'block':'none';
+    document.getElementById('soc-nome-wrap').style.display=isAtleta?'none':'block';
+    if(!isAtleta) document.getElementById('soc-nome').value='';
+  };
+  // Ao escolher atleta, preenche nome automaticamente
+  document.getElementById('soc-atleta-id').onchange=function(){
+    const j=DB.jogadores.find(x=>x.id===this.value);
+    if(j) document.getElementById('soc-nome').value=j.nome;
+  };
   openModal('modal-socio');
 }
 
 async function saveSocio(){
   const isCoord=!currentUser?.grupos;
   if(!isCoord){toast('Sem permissão.');return;}
-  const nome=document.getElementById('soc-nome').value.trim();
-  if(!nome){alert('Introduz o nome do sócio');return;}
   const tipo=document.getElementById('soc-tipo').value;
   const atleta_id=tipo==='atleta'?(document.getElementById('soc-atleta-id').value||null):null;
-  // Auto-preencher nome do atleta se ligado
   const atleta=atleta_id?DB.jogadores.find(x=>x.id===atleta_id):null;
+  const nome=atleta?atleta.nome:document.getElementById('soc-nome').value.trim();
+  if(!nome){alert(atleta_id?'Escolhe um atleta':'Introduz o nome do sócio');return;}
   const rec={
-    nome:atleta&&!document.getElementById('soc-nome').value.trim()?atleta.nome:nome,
+    nome,
     tipo,atleta_id,
     estado:document.getElementById('soc-estado').value,
     quota:document.getElementById('soc-quota').value,
