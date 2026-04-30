@@ -159,6 +159,45 @@ textarea.form-input{resize:vertical;min-height:70px}
 .sync-indicator{position:fixed;top:60px;right:16px;background:var(--green);color:#fff;font-size:11px;padding:4px 10px;border-radius:20px;z-index:100;opacity:0;transition:opacity .3s}
 .sync-indicator.show{opacity:1}
 @media(max-width:700px){.sidebar{display:none}.card-2col{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}.swot-grid{grid-template-columns:1fr}}
+/* ── Ficha Clínica ── */
+.clin-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;border-bottom:2px solid var(--gray-100);padding-bottom:10px}
+.clin-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--gray-200);background:#fff;color:var(--gray-600);transition:all .15s}
+.clin-tab.active{background:var(--red);color:#fff;border-color:var(--red)}
+.clin-header-card{background:#fff;border-radius:var(--radius-lg);border:1px solid var(--gray-100);box-shadow:var(--shadow);padding:16px;display:flex;gap:14px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.clin-avatar{width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--red-light);flex-shrink:0}
+.clin-avatar-ini{width:64px;height:64px;border-radius:50%;background:var(--red-light);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--red);flex-shrink:0}
+.clin-info{flex:1}
+.clin-name{font-size:16px;font-weight:700;color:var(--gray-900)}
+.clin-meta{font-size:12px;color:var(--gray-500);margin-top:2px}
+.clin-estado{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:.04em}
+.clin-apto{background:#D1FAE5;color:#065F46}
+.clin-lesionado{background:#FEE2E2;color:#991B1B}
+.clin-observacao{background:#FEF3C7;color:#92400E}
+.clin-section{background:#fff;border-radius:var(--radius-lg);border:1px solid var(--gray-100);box-shadow:var(--shadow);padding:16px;margin-bottom:12px}
+.clin-section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-500);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.clin-timeline{list-style:none;padding:0;margin:0}
+.clin-tl-item{display:flex;gap:12px;margin-bottom:14px;position:relative}
+.clin-tl-dot{width:10px;height:10px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:4px}
+.clin-tl-date{font-size:11px;color:var(--gray-400);white-space:nowrap;margin-top:2px}
+.clin-tl-text{font-size:12px;color:var(--gray-700);line-height:1.5}
+.clin-metric{background:var(--gray-50);border-radius:8px;padding:10px 12px;text-align:center}
+.clin-metric-val{font-size:20px;font-weight:700;color:var(--red)}
+.clin-metric-label{font-size:10px;color:var(--gray-500);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+/* ── Sócios ── */
+.soc-filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.soc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.soc-card{background:#fff;border-radius:var(--radius-lg);border:1px solid var(--gray-100);box-shadow:var(--shadow);overflow:hidden}
+.soc-card-header{padding:12px 14px 8px;display:flex;justify-content:space-between;align-items:center}
+.soc-card-name{font-size:13px;font-weight:600;color:var(--gray-900)}
+.soc-card-body{padding:0 14px 12px;font-size:12px;color:var(--gray-600)}
+.soc-card-footer{padding:8px 14px;border-top:1px solid var(--gray-100);display:flex;justify-content:space-between;align-items:center;font-size:11px}
+.soc-badge-ativo{background:#D1FAE5;color:#065F46;border:none}
+.soc-badge-inativo{background:#F3F4F6;color:#6B7280;border:none}
+.soc-badge-pendente{background:#FEF3C7;color:#92400E;border:none}
+.quota-paga{background:#D1FAE5;color:#065F46}
+.quota-falta{background:#FEE2E2;color:#991B1B}
+.quota-parcial{background:#FEF3C7;color:#92400E}
+.soc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
 /* ── Metodologia ── */
 .met-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
 .met-secoes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
@@ -245,6 +284,7 @@ textarea.form-input{resize:vertical;min-height:70px}
       <div class="nav-section">Jogo</div>
       <div class="nav-item" data-page="jogo"><span class="nav-icon">🏒</span>Jogo ao Vivo</div>
       <div class="nav-section coord-only" style="display:none">Administração</div>
+      <div class="nav-item coord-only" data-page="socios" style="display:none"><span class="nav-icon">🏅</span>Sócios</div>
       <div class="nav-item coord-only" data-page="admin" style="display:none"><span class="nav-icon">⚙️</span>Administração</div>
     </nav>
     <main class="main">
@@ -308,7 +348,7 @@ textarea.form-input{resize:vertical;min-height:70px}
         <div id="ficha-content"></div>
       </div>
       <div id="page-avaliacao" class="page">
-        <div class="page-header"><div class="page-title">Avaliação Técnica</div><div class="page-sub">Sub9+Sub11 · Competências individuais</div></div>
+        <div class="page-header"><div class="page-title">Avaliação Técnica</div><div class="page-sub" id="aval-page-sub">Competências individuais</div></div>
         <div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap" id="aval-tabs">
           <div class="gtab active" onclick="setAvalView('ranking',this)">Ranking</div>
           <div class="gtab" onclick="setAvalView('individual',this)">Individual + SWOT</div>
@@ -422,7 +462,7 @@ textarea.form-input{resize:vertical;min-height:70px}
         <div class="card">
           <div class="card-title">⚡ Registar evento</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-            <button class="btn btn-green btn-sm" onclick="regEvento('golo')">⚽ Golo ADB</button>
+            <button class="btn btn-green btn-sm" onclick="regEvento('golo')">⚽ Golo</button>
             <button class="btn btn-sm" style="background:#FEE2E2;color:#991B1B;border-color:#FCA5A5" onclick="regEvento('golo-s')">⚽ Golo sofrido</button>
             <button class="btn btn-sm" onclick="regEvento('falta')">🟡 Falta</button>
             <button class="btn btn-sm" style="background:#FEF3C7;color:#92400E;border-color:#FCD34D" onclick="regEvento('amarelo')">🟨 Amarelo</button>
@@ -527,6 +567,39 @@ textarea.form-input{resize:vertical;min-height:70px}
           </div>
           <div style="font-size:11px;color:var(--gray-400);margin-top:6px">Os grupos definem quais escalões pertencem a cada treinador.</div>
         </div>
+      </div>
+
+      <!-- ── SÓCIOS ── -->
+      <div id="page-socios" class="page">
+        <div class="page-header">
+          <div><div class="page-title">Gestão de Sócios</div><div class="page-sub">Atletas e membros do clube</div></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" onclick="openModalSocio()">+ Novo Sócio</button>
+            <button class="btn" onclick="gerarPDFSocios()">📄 PDF</button>
+          </div>
+        </div>
+        <div class="soc-stats" id="soc-stats"></div>
+        <div class="soc-filters">
+          <select class="form-input" id="soc-fil-estado" onchange="renderSocios()" style="max-width:150px">
+            <option value="">Todos os estados</option>
+            <option value="Activo">Activo</option>
+            <option value="Inactivo">Inactivo</option>
+            <option value="Pendente">Pendente</option>
+          </select>
+          <select class="form-input" id="soc-fil-quota" onchange="renderSocios()" style="max-width:160px">
+            <option value="">Todas as quotas</option>
+            <option value="Paga">Quota Paga</option>
+            <option value="Em falta">Em Falta</option>
+            <option value="Parcial">Parcial</option>
+          </select>
+          <select class="form-input" id="soc-fil-tipo" onchange="renderSocios()" style="max-width:160px">
+            <option value="">Todos os tipos</option>
+            <option value="atleta">Atleta</option>
+            <option value="externo">Pai / Adepto</option>
+          </select>
+          <input type="text" class="form-input" id="soc-search" onkeyup="renderSocios()" placeholder="🔍 Pesquisar…" style="max-width:200px">
+        </div>
+        <div class="soc-grid" id="soc-grid"></div>
       </div>
     </main>
   </div>
@@ -755,6 +828,88 @@ textarea.form-input{resize:vertical;min-height:70px}
 </div>
 
 
+<!-- Modal Clínico -->
+<div id="modal-clinico-nota" class="modal-bg">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header"><span class="modal-title" id="mcn-title">Nova Nota Clínica</span><button class="modal-close" onclick="closeModal('modal-clinico-nota')">✕</button></div>
+    <input type="hidden" id="mcn-jid">
+    <input type="hidden" id="mcn-eid">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Data</label><input type="date" class="form-input" id="mcn-data"></div>
+      <div class="form-group"><label class="form-label">Tipo</label>
+        <select class="form-input" id="mcn-tipo">
+          <option value="nota">📝 Nota</option>
+          <option value="tratamento">💊 Tratamento</option>
+          <option value="exame">🔬 Exame</option>
+          <option value="alta">✅ Alta Médica</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:16px"><label class="form-label">Descrição</label><textarea class="form-input" id="mcn-texto" style="min-height:100px" placeholder="Descreve a evolução, tratamento ou observação…"></textarea></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveNotaClinica()">💾 Guardar</button>
+      <button class="btn" onclick="closeModal('modal-clinico-nota')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Sócio -->
+<div id="modal-socio" class="modal-bg">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header"><span class="modal-title" id="modal-soc-title">Novo Sócio</span><button class="modal-close" onclick="closeModal('modal-socio')">✕</button></div>
+    <input type="hidden" id="soc-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Nome</label><input type="text" class="form-input" id="soc-nome" placeholder="Nome completo"></div>
+      <div class="form-group"><label class="form-label">Tipo</label>
+        <select class="form-input" id="soc-tipo">
+          <option value="atleta">Atleta (ligado)</option>
+          <option value="externo">Pai / Adepto</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px" id="soc-atleta-wrap">
+      <label class="form-label">Atleta associado</label>
+      <select class="form-input" id="soc-atleta-id"><option value="">— Escolher atleta —</option></select>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Estado</label>
+        <select class="form-input" id="soc-estado">
+          <option value="Activo">Activo</option>
+          <option value="Inactivo">Inactivo</option>
+          <option value="Pendente">Pendente</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Quota</label>
+        <select class="form-input" id="soc-quota">
+          <option value="Paga">Paga</option>
+          <option value="Em falta">Em Falta</option>
+          <option value="Parcial">Parcial</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Periodicidade</label>
+        <select class="form-input" id="soc-periodo">
+          <option value="anual">Anual</option>
+          <option value="semestral">Semestral</option>
+          <option value="trimestral">Trimestral</option>
+          <option value="mensal">Mensal</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Valor (€)</label><input type="number" class="form-input" id="soc-valor" placeholder="ex: 50" min="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Último pagamento</label><input type="date" class="form-input" id="soc-ultimo-pag"></div>
+      <div class="form-group"><label class="form-label">Contacto</label><input type="tel" class="form-input" id="soc-contacto" placeholder="912 345 678"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:16px"><label class="form-label">Obs.</label><input type="text" class="form-input" id="soc-obs" placeholder="Opcional"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveSocio()">💾 Guardar</button>
+      <button class="btn" onclick="closeModal('modal-socio')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 </head>
 <body>
 
@@ -827,7 +982,7 @@ async function loadAllData(){
   _loadingData = true;
   showLoading(true);
   try {
-    const [jogsR, sessR, avalR, cfgR, jogosR, delegR, treinosR, metR] = await Promise.all([
+    const [jogsR, sessR, avalR, cfgR, jogosR, delegR, treinosR, metR, clinR, socR] = await Promise.all([
       sb.from('jogadores').select('*').order('nome'),
       sb.from('sessoes').select('*').order('data',{ascending:false}),
       sb.from('avaliacoes').select('*'),
@@ -836,6 +991,8 @@ async function loadAllData(){
       sb.from('delegados').select('*'),
       sb.from('treinos').select('*').order('data',{ascending:false}),
       sb.from('metodologia').select('*').order('criado_em',{ascending:false}),
+      sb.from('clinico').select('*'),
+      sb.from('socios').select('*').order('nome'),
     ]);
     // Deduplicate jogadores by id (fix for repeated players bug)
     const rawJogs = jogsR.data || [];
@@ -866,6 +1023,8 @@ async function loadAllData(){
     DB.delegados = delegR?.data || [];
     DB.treinos = treinosR?.data || [];
     DB.metodologia = metR?.data || [];
+    DB.clinico = clinR?.data || [];
+    DB.socios = socR?.data || [];
     // Config
     (cfgR.data||[]).forEach(c=>{
       if(c.key==='pins') DB.config.pins=JSON.parse(c.value);
@@ -1017,7 +1176,7 @@ document.querySelectorAll('.nav-item[data-page]').forEach(el=>{
   });
 });
 function renderPage(p){
-  const map={dashboard:renderDashboard,presencas:renderPresencas,jogadores:renderJogadores,sessoes:renderSessoes,ficha:renderFichaPage,avaliacao:renderAvaliacao,relatorio:renderRelatorio,convocatoria:renderConvocatoria,jogo:renderJogoAoVivo,admin:renderAdmin,treinos:renderTreinos,metodologia:renderMetodologia};
+  const map={dashboard:renderDashboard,presencas:renderPresencas,jogadores:renderJogadores,sessoes:renderSessoes,ficha:renderFichaPage,avaliacao:renderAvaliacao,relatorio:renderRelatorio,convocatoria:renderConvocatoria,jogo:renderJogoAoVivo,admin:renderAdmin,treinos:renderTreinos,metodologia:renderMetodologia,socios:renderSocios};
   if(map[p])map[p]();
 }
 function buildGrupoTabs(cid,pageKey){
@@ -1320,6 +1479,18 @@ function renderFicha(){
   const jid=document.getElementById('fic-sel').value,div=document.getElementById('ficha-content');
   if(!jid){div.innerHTML='';document.getElementById('btn-pdf').style.display='none';return;}
   document.getElementById('btn-pdf').style.display='inline-flex';
+  // Adicionar botão PDF Clínico
+  let btnPdfClin=document.getElementById('btn-pdf-clin');
+  if(!btnPdfClin){
+    const header=document.querySelector('#page-ficha .page-header');
+    btnPdfClin=document.createElement('button');
+    btnPdfClin.id='btn-pdf-clin';
+    btnPdfClin.className='btn';
+    btnPdfClin.style.cssText='background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE';
+    btnPdfClin.innerHTML='🩺 Ficha Clínica';
+    btnPdfClin.onclick=()=>gerarPDFClinico(jid);
+    header.appendChild(btnPdfClin);
+  } else { btnPdfClin.onclick=()=>gerarPDFClinico(jid); }
   const j=DB.jogadores.find(x=>x.id===jid);if(!j)return;
   const g=['Sub9','Sub11'].includes(j.sub)?'Sub9+Sub11':'Sub13+Sub15';
   const sess=sessDoGrupo(g),st=statsJogador(j,sess);
@@ -1387,6 +1558,14 @@ function renderFicha(){
   const cW=(bW+bG)*monthly.length;
   const monthSVG=`<svg viewBox="0 0 ${cW} ${cH+24}" width="100%"><line x1="0" y1="${cH}" x2="${cW}" y2="${cH}" stroke="#E5E7EB" stroke-width="1"/>${barsSVG}</svg>`;
 
+  // Abas: Estatísticas | Clínico
+  if(!document.getElementById('ficha-tab-bar')){
+    const tabBar=document.createElement('div');
+    tabBar.id='ficha-tab-bar';
+    tabBar.className='clin-tabs';
+    tabBar.innerHTML='<div class="clin-tab active" id="ftab-stats" onclick="setFichaTab(&quot;stats&quot;)">📊 Estatísticas</div><div class="clin-tab" id="ftab-clinico" onclick="setFichaTab(&quot;clinico&quot;)">🩺 Clínico</div>';
+    div.parentNode.insertBefore(tabBar,div);
+  }
   div.innerHTML=`
     <div class="card">
       <div class="ficha-header">
@@ -1528,6 +1707,10 @@ function getAvalData(tipo){
   }).sort((a,b)=>b.media-a.media);
 }
 function renderAvaliacao(){
+  const grupos=currentUser?.grupos||GRUPOS;
+  const subLabel=grupos.join(' + ')||'Todos os escalões';
+  const subEl=document.getElementById('aval-page-sub');
+  if(subEl) subEl.textContent=subLabel+' · Competências individuais';
   renderAvalRanking();
   const pre=getAvalData('pre'),sel=document.getElementById('aval-sel');
   sel.innerHTML='<option value="">— Escolher jogador —</option>'+pre.map(d=>`<option value="${d.nome}">${d.nome} (${d.media.toFixed(2)})</option>`).join('');
@@ -2358,7 +2541,7 @@ function regEvento(tipo){
     return;
   }
   pendTipo=tipo;
-  const labels={'golo':'⚽ Golo ADB — Quem marcou?','golo-s':'⚽ Golo sofrido — (sem jogador)','falta':'🟡 Falta — Quem fez?','amarelo':'🟨 Amarelo — Quem?','azul':'🟦 Azul — Quem?','vermelho':'🟥 Vermelho — Quem?','sub':'🔄 Substituição'};
+  const labels={'golo':'⚽ Golo — Quem marcou?','golo-s':'⚽ Golo sofrido — (sem jogador)','falta':'🟡 Falta — Quem fez?','amarelo':'🟨 Amarelo — Quem?','azul':'🟦 Azul — Quem?','vermelho':'🟥 Vermelho — Quem?','sub':'🔄 Substituição'};
   document.getElementById('evento-title').textContent=labels[tipo]||tipo;
   // Mostrar campo extra "quem sai" para substituição
   const subSaiWrap=document.getElementById('evento-jog-sai-wrap');
@@ -2425,7 +2608,7 @@ function confirmarEvento(){
   if(pendTipo==='golo'){
     jogoState.scoreH++;
     if(jid){if(!jogoState.golosJog[jid])jogoState.golosJog[jid]=0;jogoState.golosJog[jid]++;}
-    jogoState.eventos.push({tipo:'golo',min,jid,desc:'Golo ADB'+(j?' — '+j.nome:''),icon:'⚽',ts:Date.now()});
+    jogoState.eventos.push({tipo:'golo',min,jid,desc:'Golo'+(j?' — '+j.nome:''),icon:'⚽',ts:Date.now()});
   } else if(pendTipo==='golo-s'){
     jogoState.scoreA++;
     jogoState.eventos.push({tipo:'golo-s',min,desc:'Golo sofrido',icon:'⚽',ts:Date.now()});
@@ -3004,6 +3187,527 @@ async function saveMetodologia(){
   renderMetodologia();
 }
 
+
+
+// ═══ FICHA — TABS ═══
+let fichaActiveTab='stats';
+function setFichaTab(tab){
+  fichaActiveTab=tab;
+  document.getElementById('ftab-stats')?.classList.toggle('active',tab==='stats');
+  document.getElementById('ftab-clinico')?.classList.toggle('active',tab==='clinico');
+  const jid=document.getElementById('fic-sel')?.value;
+  if(tab==='clinico'&&jid) renderFichaClinico(jid);
+  else { const div=document.getElementById('ficha-content'); if(div&&jid) renderFicha(); }
+}
+
+// ═══ FICHA CLÍNICA ═══
+function renderFichaClinico(jid){
+  const div=document.getElementById('ficha-content');
+  const j=DB.jogadores.find(x=>x.id===jid); if(!j)return;
+  const clinData=DB.clinico?.find(x=>x.jogador_id===jid)||{};
+  const notas=(clinData.notas||[]).sort((a,b)=>b.data.localeCompare(a.data));
+  const ini=j.nome.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  const estado=clinData.estado||'Apto';
+  const estadoCls=estado==='Apto'?'clin-apto':estado==='Lesionado'?'clin-lesionado':'clin-observacao';
+  const peso=clinData.peso||'—';const altura=clinData.altura||'—';
+  const imc=(clinData.peso&&clinData.altura)?(clinData.peso/(clinData.altura/100)**2).toFixed(1):'—';
+  const isCoord=!currentUser?.grupos;
+  div.innerHTML=`
+    <div class="clin-header-card">
+      ${j.foto?`<img class="clin-avatar" src="${j.foto}" alt="${j.nome}">`:`<div class="clin-avatar-ini">${ini}</div>`}
+      <div class="clin-info">
+        <div class="clin-name">${j.nome}</div>
+        <div class="clin-meta">${j.sub} · #${j.num} · ${j.pos}</div>
+        ${j.lic?`<div class="clin-meta">📋 Lic. ${j.lic}</div>`:''}
+        ${j.cont?`<div class="clin-meta">📞 ${j.cont}</div>`:''}
+      </div>
+      <span class="clin-estado ${estadoCls}">${estado==='Apto'?'🟢':'Lesionado'===estado?'🔴':'🟡'} ${estado}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+      <div class="clin-metric"><div class="clin-metric-val">${peso}${peso!=='—'?' kg':''}</div><div class="clin-metric-label">Peso</div></div>
+      <div class="clin-metric"><div class="clin-metric-val">${altura}${altura!=='—'?' cm':''}</div><div class="clin-metric-label">Altura</div></div>
+      <div class="clin-metric"><div class="clin-metric-val">${imc}</div><div class="clin-metric-label">IMC</div></div>
+    </div>
+    ${isCoord?`<div class="clin-section">
+      <div class="clin-section-title">⚙️ Editar Dados Clínicos <button class="btn btn-sm" onclick="openModalClinEdit('${j.id}')" style="color:#2563EB;border-color:#BFDBFE">✏️ Editar</button></div>
+    </div>`:''}
+    <div class="clin-section">
+      <div class="clin-section-title">🦴 Lesão Activa
+        ${isCoord?`<button class="btn btn-sm" onclick="openModalClinEdit('${j.id}')" style="color:#DC2626;border-color:#FCA5A5">Gerir</button>`:''}
+      </div>
+      ${clinData.lesao_tipo?`
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+          <div><span style="color:var(--gray-500)">Tipo:</span> <strong>${clinData.lesao_tipo}</strong></div>
+          <div><span style="color:var(--gray-500)">Membro:</span> <strong>${clinData.lesao_membro||'—'}</strong></div>
+          <div><span style="color:var(--gray-500)">Início:</span> <strong>${clinData.lesao_inicio?new Date(clinData.lesao_inicio).toLocaleDateString('pt-PT'):'—'}</strong></div>
+          <div><span style="color:var(--gray-500)">Retorno previsto:</span> <strong>${clinData.lesao_retorno?new Date(clinData.lesao_retorno).toLocaleDateString('pt-PT'):'—'}</strong></div>
+        </div>`:
+        '<div style="font-size:12px;color:var(--gray-400)">Sem lesão activa registada.</div>'}
+    </div>
+    <div class="clin-section">
+      <div class="clin-section-title">📅 Linha do Tempo
+        ${isCoord?`<button class="btn btn-sm" onclick="openModalNotaClinica('${j.id}')" style="color:#2563EB;border-color:#BFDBFE">+ Nota</button>`:''}
+      </div>
+      ${notas.length?`<ul class="clin-timeline">${notas.map((n,i)=>`<li class="clin-tl-item">
+        <div class="clin-tl-dot" style="background:${n.tipo==='alta'?'#059669':n.tipo==='tratamento'?'#D97706':n.tipo==='exame'?'#7C3AED':'#DC2626'}"></div>
+        <div style="flex:1">
+          <div class="clin-tl-date">${new Date(n.data).toLocaleDateString('pt-PT')} · ${n.tipo==='nota'?'📝 Nota':n.tipo==='tratamento'?'💊 Tratamento':n.tipo==='exame'?'🔬 Exame':'✅ Alta Médica'}</div>
+          <div class="clin-tl-text">${n.texto}</div>
+        </div>
+        ${isCoord?`<button onclick="deleteNotaClinica('${j.id}',${i})" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--gray-400)">🗑️</button>`:''}
+      </li>`).join('')}</ul>`:
+      '<div style="font-size:12px;color:var(--gray-400)">Sem registos de evolução.</div>'}
+    </div>
+    <div class="clin-section">
+      <div class="clin-section-title">🆘 Contacto de Emergência</div>
+      <div style="font-size:12px">
+        <div><span style="color:var(--gray-500)">Nome:</span> <strong>${clinData.emerg_nome||'—'}</strong></div>
+        <div style="margin-top:4px"><span style="color:var(--gray-500)">Tel:</span> <strong>${clinData.emerg_tel?`<a href="tel:${clinData.emerg_tel}">${clinData.emerg_tel}</a>`:'—'}</strong></div>
+      </div>
+    </div>
+    <div class="clin-section">
+      <div class="clin-section-title">⚕️ Observações Gerais</div>
+      <div style="font-size:12px;color:var(--gray-700);white-space:pre-wrap">${clinData.obs_gerais||'Sem observações registadas.'}</div>
+    </div>`;
+}
+
+function openModalClinEdit(jid){
+  const j=DB.jogadores.find(x=>x.id===jid); if(!j)return;
+  const c=DB.clinico?.find(x=>x.jogador_id===jid)||{};
+  document.getElementById('mcn-jid').value=jid;
+  // Usar o modal clinico-nota para dados gerais por simplicidade
+  // Criar modal dedicado inline
+  let m=document.getElementById('modal-clin-edit');
+  if(!m){
+    m=document.createElement('div');m.id='modal-clin-edit';m.className='modal-bg';
+    m.innerHTML=`<div class="modal" style="max-width:560px">
+      <div class="modal-header"><span class="modal-title">🩺 Dados Clínicos — <span id="mce-nome"></span></span><button class="modal-close" onclick="closeModal('modal-clin-edit')">✕</button></div>
+      <input type="hidden" id="mce-jid">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="mce-estado"><option value="Apto">🟢 Apto</option><option value="Lesionado">🔴 Lesionado</option><option value="Observação">🟡 Observação</option></select></div>
+        <div class="form-group"><label class="form-label">Peso (kg)</label><input type="number" class="form-input" id="mce-peso" placeholder="ex: 65" step="0.1" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Altura (cm)</label><input type="number" class="form-input" id="mce-altura" placeholder="ex: 175" min="0"></div>
+        <div class="form-group"><label class="form-label">Lesão — Tipo</label><input type="text" class="form-input" id="mce-lesao-tipo" placeholder="ex: Entorse tornozelo"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Membro</label><input type="text" class="form-input" id="mce-lesao-membro" placeholder="ex: Pé direito"></div>
+        <div class="form-group"><label class="form-label">Início lesão</label><input type="date" class="form-input" id="mce-lesao-inicio"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:10px"><label class="form-label">Retorno previsto</label><input type="date" class="form-input" id="mce-lesao-retorno"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Emergência — Nome</label><input type="text" class="form-input" id="mce-emerg-nome" placeholder="Nome"></div>
+        <div class="form-group"><label class="form-label">Emergência — Tel</label><input type="tel" class="form-input" id="mce-emerg-tel" placeholder="912 345 678"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:16px"><label class="form-label">Observações (alergias, medicação…)</label><textarea class="form-input" id="mce-obs" style="min-height:80px"></textarea></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-primary" style="flex:1" onclick="saveClinData()">💾 Guardar</button><button class="btn" onclick="closeModal('modal-clin-edit')">Cancelar</button></div>
+    </div>`;
+    document.body.appendChild(m);
+  }
+  document.getElementById('mce-jid').value=jid;
+  document.getElementById('mce-nome').textContent=j.nome;
+  document.getElementById('mce-estado').value=c.estado||'Apto';
+  document.getElementById('mce-peso').value=c.peso||'';
+  document.getElementById('mce-altura').value=c.altura||'';
+  document.getElementById('mce-lesao-tipo').value=c.lesao_tipo||'';
+  document.getElementById('mce-lesao-membro').value=c.lesao_membro||'';
+  document.getElementById('mce-lesao-inicio').value=c.lesao_inicio||'';
+  document.getElementById('mce-lesao-retorno').value=c.lesao_retorno||'';
+  document.getElementById('mce-emerg-nome').value=c.emerg_nome||'';
+  document.getElementById('mce-emerg-tel').value=c.emerg_tel||'';
+  document.getElementById('mce-obs').value=c.obs_gerais||'';
+  openModal('modal-clin-edit');
+}
+
+async function saveClinData(){
+  const jid=document.getElementById('mce-jid').value;
+  const rec={
+    jogador_id:jid,
+    estado:document.getElementById('mce-estado').value,
+    peso:parseFloat(document.getElementById('mce-peso').value)||null,
+    altura:parseFloat(document.getElementById('mce-altura').value)||null,
+    lesao_tipo:document.getElementById('mce-lesao-tipo').value.trim()||null,
+    lesao_membro:document.getElementById('mce-lesao-membro').value.trim()||null,
+    lesao_inicio:document.getElementById('mce-lesao-inicio').value||null,
+    lesao_retorno:document.getElementById('mce-lesao-retorno').value||null,
+    emerg_nome:document.getElementById('mce-emerg-nome').value.trim()||null,
+    emerg_tel:document.getElementById('mce-emerg-tel').value.trim()||null,
+    obs_gerais:document.getElementById('mce-obs').value.trim()||null,
+  };
+  showLoading(true);
+  const existing=DB.clinico?.find(x=>x.jogador_id===jid);
+  if(existing){
+    await sb.from('clinico').update(rec).eq('jogador_id',jid);
+    Object.assign(existing,rec);
+  } else {
+    rec.notas=[];
+    await sb.from('clinico').insert(rec);
+    DB.clinico=DB.clinico||[];
+    DB.clinico.push(rec);
+  }
+  showLoading(false);
+  closeModal('modal-clin-edit');
+  toast('✅ Dados clínicos guardados!');
+  renderFichaClinico(jid);
+}
+
+function openModalNotaClinica(jid){
+  document.getElementById('mcn-jid').value=jid;
+  document.getElementById('mcn-eid').value='';
+  document.getElementById('mcn-title').textContent='Nova Nota Clínica';
+  document.getElementById('mcn-data').value=new Date().toISOString().slice(0,10);
+  document.getElementById('mcn-tipo').value='nota';
+  document.getElementById('mcn-texto').value='';
+  openModal('modal-clinico-nota');
+}
+
+async function saveNotaClinica(){
+  const jid=document.getElementById('mcn-jid').value;
+  if(!jid)return;
+  const nota={data:document.getElementById('mcn-data').value,tipo:document.getElementById('mcn-tipo').value,texto:document.getElementById('mcn-texto').value.trim()};
+  if(!nota.texto){alert('Escreve a descrição da nota');return;}
+  showLoading(true);
+  let clinData=DB.clinico?.find(x=>x.jogador_id===jid);
+  if(!clinData){
+    clinData={jogador_id:jid,estado:'Apto',notas:[]};
+    await sb.from('clinico').insert(clinData);
+    DB.clinico=DB.clinico||[];
+    DB.clinico.push(clinData);
+  }
+  const notas=[...(clinData.notas||[]),nota];
+  await sb.from('clinico').update({notas}).eq('jogador_id',jid);
+  clinData.notas=notas;
+  showLoading(false);
+  closeModal('modal-clinico-nota');
+  toast('✅ Nota registada!');
+  renderFichaClinico(jid);
+}
+
+async function deleteNotaClinica(jid,idx){
+  if(!confirm('Apagar esta nota?'))return;
+  const clinData=DB.clinico?.find(x=>x.jogador_id===jid); if(!clinData)return;
+  const notas=(clinData.notas||[]).filter((_,i)=>i!==idx);
+  await sb.from('clinico').update({notas}).eq('jogador_id',jid);
+  clinData.notas=notas;
+  toast('🗑️ Nota apagada');
+  renderFichaClinico(jid);
+}
+
+// Converte base64 JPEG em base64 PNG circular (para usar no PDF sem quadrado)
+function makeCircularLogo(b64,size=80){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      c.width=c.height=size;
+      const ctx=c.getContext('2d');
+      // Fundo vermelho igual ao header
+      ctx.fillStyle='#8B1A1A';
+      ctx.fillRect(0,0,size,size);
+      // Clip circular
+      ctx.beginPath();ctx.arc(size/2,size/2,size/2,0,Math.PI*2);ctx.closePath();ctx.clip();
+      // Zoom 30% para reduzir margem branca do logo original
+      const zoom=1.30;
+      const offset=(size-(size*zoom))/2;
+      ctx.drawImage(img,offset,offset,size*zoom,size*zoom);
+      res(c.toDataURL('image/png'));
+    };
+    img.onerror=()=>res(null);
+    img.src=b64;
+  });
+}
+async function gerarPDFClinico(jid){
+  const j=DB.jogadores.find(x=>x.id===jid); if(!j){toast('Atleta não encontrado');return;}
+  const c=DB.clinico?.find(x=>x.jogador_id===jid)||{};
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,margin=16,cW=W-margin*2;
+  const RED=[139,26,26],GRAY=[107,114,128],LGRAY=[243,244,246],WHITE=[255,255,255],BLK=[17,24,39];
+  const clubeNome=DB.config?.clube_nome||document.querySelector('.topbar-title')?.textContent||'Clube';
+  const epoca=DB.config?.epoca||'2025/2026';
+  // Pré-processar logo circular
+  const logoCircular=await makeCircularLogo(LOGO_B64,600).catch(()=>null);
+  // ── Helpers ──
+  const section=(title,yPos)=>{
+    doc.setFillColor(...LGRAY);doc.rect(margin,yPos,cW,7,'F');
+    doc.setTextColor(...BLK);doc.setFontSize(9);doc.setFont('helvetica','bold');
+    doc.text(title,margin+2,yPos+5);
+    return yPos+12;
+  };
+  const checkPage=(yPos,needed=20)=>{if(yPos+needed>278){doc.addPage();return 20;}return yPos;};
+  let y=0;
+  // ── Header ──
+  doc.setFillColor(...RED);doc.rect(0,0,W,26,'F');
+  try{if(logoCircular)doc.addImage(logoCircular,'PNG',margin,3,20,20);else doc.addImage(LOGO_B64,'JPEG',margin,3,20,20);}catch(e){}
+  doc.setTextColor(...WHITE);doc.setFontSize(15);doc.setFont('helvetica','bold');
+  doc.text(clubeNome+' - Ficha Clínica do Atleta',margin+24,11);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');
+  doc.text('Época '+epoca+' · Gerado em '+new Date().toLocaleDateString('pt-PT'),margin+24,18);
+  y=34;
+  // ── Dados do atleta (foto + info lado a lado) ──
+  const FOTO_SIZE=26;
+  if(j.foto){
+    try{
+      const resp=await fetch(j.foto);const blob=await resp.blob();
+      const b64=await new Promise(res=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.readAsDataURL(blob);});
+      doc.addImage(b64,'JPEG',margin,y,FOTO_SIZE,FOTO_SIZE);
+    }catch(e){}
+  }
+  const infoX=j.foto?margin+FOTO_SIZE+6:margin;
+  doc.setFontSize(13);doc.setFont('helvetica','bold');doc.setTextColor(...BLK);
+  doc.text(j.nome,infoX,y+6);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(...GRAY);
+  doc.text(`${j.sub||'—'} · #${j.num||'—'} · ${j.pos||'—'}`,infoX,y+12);
+  if(j.nasc){const idade=new Date().getFullYear()-new Date(j.nasc).getFullYear();doc.text(`Nasc: ${fmtDate(j.nasc)} (${idade} anos)`,infoX,y+18);}
+  if(j.cont){doc.text(`Contacto EE: ${j.cont}`,infoX,y+24);}
+  y+=FOTO_SIZE+8;
+  // ── Badge estado ──
+  const estado=c.estado||'Apto';
+  const estadoCor=estado==='Apto'?{bg:[209,250,229],tx:[6,95,70]}:estado==='Lesionado'?{bg:[254,226,226],tx:[153,27,27]}:{bg:[254,243,199],tx:[146,64,14]};
+  doc.setFillColor(...estadoCor.bg);doc.roundedRect(margin,y,55,9,2,2,'F');
+  doc.setTextColor(...estadoCor.tx);doc.setFontSize(10);doc.setFont('helvetica','bold');
+  doc.text('Estado: '+estado,margin+3,y+6);
+  y+=16;
+  // ── Dados Antropométricos ──
+  y=section('DADOS ANTROPOMÉTRICOS',y);
+  doc.setFont('helvetica','normal');doc.setTextColor(...GRAY);doc.setFontSize(9);
+  const peso=c.peso?`${c.peso} kg`:'N/D';
+  const alt=c.altura?`${c.altura} cm`:'N/D';
+  const imc=(c.peso&&c.altura)?(c.peso/(c.altura/100)**2).toFixed(1):'N/D';
+  doc.text(`Peso: ${peso}   |   Altura: ${alt}   |   IMC: ${imc}`,margin,y);y+=12;
+  // ── Lesão activa ──
+  y=checkPage(y,25);y=section('LESÃO ACTIVA',y);
+  doc.setFont('helvetica','normal');doc.setTextColor(...GRAY);doc.setFontSize(9);
+  if(c.lesao_tipo){
+    doc.text(`Tipo: ${c.lesao_tipo}   |   Membro: ${c.lesao_membro||'—'}`,margin,y);y+=6;
+    doc.text(`Início: ${c.lesao_inicio||'—'}   |   Retorno previsto: ${c.lesao_retorno||'—'}`,margin,y);y+=10;
+  } else {doc.text('Sem lesão activa.',margin,y);y+=10;}
+  // ── Contacto de emergência ──
+  y=checkPage(y,20);y=section('CONTACTO DE EMERGÊNCIA',y);
+  doc.setFont('helvetica','normal');doc.setTextColor(...GRAY);doc.setFontSize(9);
+  doc.text(`Nome: ${c.emerg_nome||'—'}   |   Tel: ${c.emerg_tel||'—'}`,margin,y);y+=12;
+  // ── Observações gerais (alergias, medicação, condições) ──
+  if(c.obs_gerais){
+    y=checkPage(y,25);y=section('OBSERVAÇÕES GERAIS',y);
+    doc.setFont('helvetica','normal');doc.setTextColor(...GRAY);doc.setFontSize(9);
+    const ls=doc.splitTextToSize(c.obs_gerais,cW-4);
+    doc.text(ls,margin,y);y+=ls.length*5+8;
+  }
+  // ── Linha do tempo ──
+  const notas=(c.notas||[]).sort((a,b)=>b.data.localeCompare(a.data));
+  if(notas.length){
+    y=checkPage(y,30);y=section('LINHA DO TEMPO DE EVOLUÇÃO',y);
+    notas.forEach(n=>{
+      y=checkPage(y,20);
+      doc.setFont('helvetica','bold');doc.setTextColor(...BLK);doc.setFontSize(8);
+      const dataFmt=n.data?new Date(n.data).toLocaleDateString('pt-PT'):n.data||'';
+      doc.text(`${dataFmt} · ${n.tipo||'Nota'}`,margin,y);y+=5;
+      doc.setFont('helvetica','normal');doc.setTextColor(...GRAY);
+      const ls=doc.splitTextToSize(n.texto||'',cW-6);
+      doc.text(ls,margin+3,y);y+=ls.length*4.5+5;
+    });
+  }
+  // ── Historial de lesões (lesões anteriores se houver) ──
+  const lesoesPrev=(c.historial_lesoes||[]);
+  if(lesoesPrev.length){
+    y=checkPage(y,30);y=section('HISTORIAL DE LESÕES',y);
+    lesoesPrev.forEach(l=>{
+      y=checkPage(y,18);
+      doc.setFont('helvetica','bold');doc.setTextColor(...BLK);doc.setFontSize(8);
+      doc.text(`${l.tipo||'—'}  ·  ${l.membro||'—'}  ·  ${l.inicio||'—'} → ${l.retorno||'—'}`,margin,y);y+=5;
+      if(l.obs){doc.setFont('helvetica','normal');doc.setTextColor(...GRAY);const ls=doc.splitTextToSize(l.obs,cW-4);doc.text(ls,margin+3,y);y+=ls.length*4.5;}
+      y+=4;
+    });
+  }
+  // ── Rodapé em todas as páginas ──
+  const pageCount=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pageCount;i++){
+    doc.setPage(i);
+    doc.setFillColor(...RED);doc.rect(0,284,W,13,'F');
+    doc.setTextColor(...WHITE);doc.setFontSize(7);doc.setFont('helvetica','normal');
+    doc.text(`${clubeNome} — Ficha Clínica confidencial`,margin,290);
+    doc.text(`Gerado em ${new Date().toLocaleDateString('pt-PT')} · ${i}/${pageCount}`,W-margin,290,{align:'right'});
+  }
+  doc.save(`ficha_clinica_${j.nome.replace(/\s/g,'_')}.pdf`);
+  toast('📄 PDF clínico gerado!');
+}
+
+// ═══ SÓCIOS ═══
+function renderSocios(){
+  const isCoord=!currentUser?.grupos;
+  // Mostrar/ocultar nav
+  document.querySelectorAll('[data-page="socios"]').forEach(el=>el.style.display=isCoord?'flex':'none');
+  const lista=DB.socios||[];
+  // Stats
+  const statsEl=document.getElementById('soc-stats');
+  if(statsEl){
+    const total=lista.length;
+    const ativos=lista.filter(x=>x.estado==='Activo').length;
+    const devem=lista.filter(x=>x.quota==='Em falta').length;
+    const receita=lista.filter(x=>x.quota==='Paga').reduce((a,s)=>a+(parseFloat(s.valor)||0),0);
+    statsEl.innerHTML=`
+      <div class="metric-card"><div class="metric-label">Total Sócios</div><div class="metric-value">${total}</div></div>
+      <div class="metric-card"><div class="metric-label">Activos</div><div class="metric-value metric-ok">${ativos}</div></div>
+      <div class="metric-card"><div class="metric-label">Em Falta</div><div class="metric-value ${devem>0?'metric-danger':''}">${devem}</div></div>
+      <div class="metric-card"><div class="metric-label">Receita</div><div class="metric-value">€${receita.toFixed(0)}</div></div>`;
+  }
+  const grid=document.getElementById('soc-grid'); if(!grid)return;
+  const filEst=document.getElementById('soc-fil-estado')?.value||'';
+  const filQuota=document.getElementById('soc-fil-quota')?.value||'';
+  const filTipo=document.getElementById('soc-fil-tipo')?.value||'';
+  const search=(document.getElementById('soc-search')?.value||'').toLowerCase();
+  const filtered=lista.filter(s=>
+    (!filEst||s.estado===filEst)&&
+    (!filQuota||s.quota===filQuota)&&
+    (!filTipo||s.tipo===filTipo)&&
+    (!search||s.nome.toLowerCase().includes(search))
+  );
+  if(!filtered.length){
+    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray-400)">
+      <div style="font-size:36px;margin-bottom:8px">🏅</div>
+      <div>${isCoord?'Sem sócios. Clica em "+ Novo Sócio" para adicionar.':'Sem resultados.'}</div></div>`;
+    return;
+  }
+  grid.innerHTML=filtered.map(s=>{
+    const estCls=s.estado==='Activo'?'soc-badge-ativo':s.estado==='Inactivo'?'soc-badge-inativo':'soc-badge-pendente';
+    const qCls=s.quota==='Paga'?'quota-paga':s.quota==='Em falta'?'quota-falta':'quota-parcial';
+    const atleta=s.tipo==='atleta'&&s.atleta_id?DB.jogadores.find(x=>x.id===s.atleta_id):null;
+    const editBtns=isCoord?`<div style="display:flex;gap:4px">
+      <button class="btn btn-sm" onclick="openModalSocio('${s.id}')" style="color:#2563EB;border-color:#BFDBFE">✏️</button>
+      <button class="btn btn-sm" onclick="deleteSocio('${s.id}')" style="color:#DC2626;border-color:#FCA5A5">🗑️</button>
+    </div>`:'';
+    return`<div class="soc-card">
+      <div class="soc-card-header">
+        <div>
+          <div class="soc-card-name">${s.nome}</div>
+          <div style="font-size:11px;color:var(--gray-400)">${s.tipo==='atleta'?'🏒 Atleta':'👤 Pai/Adepto'}${atleta?` — ${atleta.nome}`:''}</div>
+        </div>
+        ${editBtns}
+      </div>
+      <div class="soc-card-body">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+          <span class="badge ${estCls}">${s.estado}</span>
+          <span class="badge ${qCls}">💳 ${s.quota}</span>
+          ${s.periodo?`<span class="badge" style="background:var(--gray-50);color:var(--gray-500)">${s.periodo}</span>`:''}
+        </div>
+        ${s.valor?`<div>Valor: <strong>€${s.valor}/${s.periodo||'período'}</strong></div>`:''}
+        ${s.ultimo_pag?`<div style="margin-top:4px">Último pag.: <strong>${new Date(s.ultimo_pag).toLocaleDateString('pt-PT')}</strong></div>`:''}
+        ${s.contacto?`<div style="margin-top:4px">📞 ${s.contacto}</div>`:''}
+        ${s.obs?`<div style="margin-top:4px;color:var(--gray-400)">${s.obs}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openModalSocio(id){
+  const isCoord=!currentUser?.grupos;
+  if(!isCoord){toast('Apenas o coordenador pode gerir sócios.');return;}
+  const s=id?(DB.socios||[]).find(x=>x.id===id):null;
+  document.getElementById('soc-edit-id').value=id||'';
+  document.getElementById('modal-soc-title').textContent=s?'Editar Sócio':'Novo Sócio';
+  document.getElementById('soc-nome').value=s?s.nome||'':'';
+  document.getElementById('soc-tipo').value=s?s.tipo||'atleta':'atleta';
+  document.getElementById('soc-estado').value=s?s.estado||'Activo':'Activo';
+  document.getElementById('soc-quota').value=s?s.quota||'Paga':'Paga';
+  document.getElementById('soc-periodo').value=s?s.periodo||'anual':'anual';
+  document.getElementById('soc-valor').value=s?s.valor||'':'';
+  document.getElementById('soc-ultimo-pag').value=s?s.ultimo_pag||'':'';
+  document.getElementById('soc-contacto').value=s?s.contacto||'':'';
+  document.getElementById('soc-obs').value=s?s.obs||'':'';
+  // Popular select atletas
+  const sel=document.getElementById('soc-atleta-id');
+  sel.innerHTML='<option value="">— Escolher atleta —</option>'+(DB.jogadores||[]).map(j=>`<option value="${j.id}" ${s&&s.atleta_id===j.id?'selected':''}>${j.nome} (${j.sub})</option>`).join('');
+  document.getElementById('soc-atleta-wrap').style.display=document.getElementById('soc-tipo').value==='atleta'?'block':'none';
+  document.getElementById('soc-tipo').onchange=function(){document.getElementById('soc-atleta-wrap').style.display=this.value==='atleta'?'block':'none';};
+  openModal('modal-socio');
+}
+
+async function saveSocio(){
+  const isCoord=!currentUser?.grupos;
+  if(!isCoord){toast('Sem permissão.');return;}
+  const nome=document.getElementById('soc-nome').value.trim();
+  if(!nome){alert('Introduz o nome do sócio');return;}
+  const tipo=document.getElementById('soc-tipo').value;
+  const atleta_id=tipo==='atleta'?(document.getElementById('soc-atleta-id').value||null):null;
+  // Auto-preencher nome do atleta se ligado
+  const atleta=atleta_id?DB.jogadores.find(x=>x.id===atleta_id):null;
+  const rec={
+    nome:atleta&&!document.getElementById('soc-nome').value.trim()?atleta.nome:nome,
+    tipo,atleta_id,
+    estado:document.getElementById('soc-estado').value,
+    quota:document.getElementById('soc-quota').value,
+    periodo:document.getElementById('soc-periodo').value,
+    valor:parseFloat(document.getElementById('soc-valor').value)||null,
+    ultimo_pag:document.getElementById('soc-ultimo-pag').value||null,
+    contacto:document.getElementById('soc-contacto').value.trim()||null,
+    obs:document.getElementById('soc-obs').value.trim()||null,
+  };
+  showLoading(true);
+  const editId=document.getElementById('soc-edit-id').value;
+  if(editId){
+    await sb.from('socios').update(rec).eq('id',editId);
+    const idx=(DB.socios||[]).findIndex(x=>x.id===editId);
+    if(idx>=0) DB.socios[idx]={...DB.socios[idx],...rec};
+  } else {
+    rec.id=uid();
+    await sb.from('socios').insert(rec);
+    DB.socios=DB.socios||[];
+    DB.socios.push(rec);
+  }
+  showLoading(false);
+  closeModal('modal-socio');
+  toast('✅ Sócio guardado!');
+  renderSocios();
+}
+
+async function deleteSocio(id){
+  if(!confirm('Apagar este sócio?'))return;
+  await sb.from('socios').delete().eq('id',id);
+  DB.socios=(DB.socios||[]).filter(x=>x.id!==id);
+  toast('🗑️ Sócio apagado');
+  renderSocios();
+}
+
+async function gerarPDFSocios(){
+  const lista=DB.socios||[];
+  if(!lista.length){toast('Sem sócios para exportar');return;}
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,margin=16,cW=W-margin*2;
+  const RED=[139,26,26],GRAY=[107,114,128],LGRAY=[243,244,246],WHITE=[255,255,255],BLK=[17,24,39];
+  doc.setFillColor(...RED);doc.rect(0,0,W,22,'F');
+  doc.setTextColor(...WHITE);doc.setFontSize(14);doc.setFont('helvetica','bold');
+  doc.text(DB.config?.clube_nome||'Clube',W/2,9,{align:'center'});
+  doc.setFontSize(8);doc.setFont('helvetica','normal');
+  doc.text('Lista de Sócios',W/2,15,{align:'center'});
+  let y=30;
+  doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...BLK);
+  doc.text('Nome',margin,y);doc.text('Estado',90,y);doc.text('Quota',130,y);doc.text('Ú. Pag.',165,y);
+  y+=3;doc.setDrawColor(...LGRAY);doc.line(margin,y,W-margin,y);y+=5;
+  doc.setFont('helvetica','normal');
+  lista.sort((a,b)=>a.nome.localeCompare(b.nome)).forEach(s=>{
+    if(y>270){doc.addPage();y=20;}
+    doc.setTextColor(...BLK);doc.text(s.nome.substring(0,32),margin,y);
+    doc.setTextColor(s.estado==='Activo'?[6,95,70]:s.estado==='Inactivo'?[107,114,128]:[146,64,14]);
+    doc.text(s.estado,90,y);
+    doc.setTextColor(s.quota==='Paga'?[6,95,70]:s.quota==='Em falta'?[153,27,27]:[146,64,14]);
+    doc.text(s.quota,130,y);
+    doc.setTextColor(...GRAY);
+    doc.text(s.ultimo_pag?new Date(s.ultimo_pag).toLocaleDateString('pt-PT'):'—',165,y);
+    y+=6;
+  });
+  const pg=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pg;i++){
+    doc.setPage(i);
+    doc.setFillColor(...RED);doc.rect(0,285,W,12,'F');
+    doc.setTextColor(...WHITE);doc.setFontSize(7);
+    doc.text(`${DB.config?.clube_nome||'Clube'} — Sócios`,margin,291);
+    doc.text(`Gerado ${new Date().toLocaleDateString('pt-PT')} · ${i}/${pg}`,W-margin,291,{align:'right'});
+  }
+  doc.save('socios.pdf');
+  toast('📄 PDF de sócios gerado!');
+}
 async function deleteMetodologia(id){
   if(!confirm('Apagar esta secção?'))return;
   await sb.from('metodologia').delete().eq('id',id);
