@@ -3967,16 +3967,21 @@ async function gerarPDFSocios(){
   try{
     const {jsPDF}=window.jspdf;
     const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-    const W=210,margin=16;
+    const W=210,margin=16,cW=W-margin*2;
     const RED=[139,26,26],GRAY=[107,114,128],LGRAY=[243,244,246],WHITE=[255,255,255],BLK=[17,24,39];
+    const clubeNome=String(DB.config?.clube_nome||document.querySelector('.topbar-title')?.textContent||'Clube');
+    const epoca=String(DB.config?.epoca||'2025/2026');
+    // Logo circular igual à ficha clínica
+    const logoCircular=await makeCircularLogo(LOGO_B64,600).catch(()=>null);
     // Cabeçalho
-    doc.setFillColor(...RED);doc.rect(0,0,W,22,'F');
-    doc.setTextColor(...WHITE);doc.setFontSize(14);doc.setFont('helvetica','bold');
-    doc.text(String(DB.config?.clube_nome||'Clube'),W/2,9,{align:'center'});
-    doc.setFontSize(8);doc.setFont('helvetica','normal');
-    doc.text('Lista de Sócios',W/2,15,{align:'center'});
+    doc.setFillColor(...RED);doc.rect(0,0,W,26,'F');
+    try{if(logoCircular)doc.addImage(logoCircular,'PNG',margin,3,20,20);else doc.addImage(LOGO_B64,'JPEG',margin,3,20,20);}catch(e){}
+    doc.setTextColor(...WHITE);doc.setFontSize(15);doc.setFont('helvetica','bold');
+    doc.text(clubeNome+' - Lista de Sócios',margin+24,11);
+    doc.setFontSize(9);doc.setFont('helvetica','normal');
+    doc.text('Época '+epoca+' · Gerado em '+new Date().toLocaleDateString('pt-PT'),margin+24,18);
     // Cabeçalho tabela
-    let y=30;
+    let y=34;
     doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...BLK);
     doc.text('Nº / Nome',margin,y);doc.text('Estado',95,y);doc.text('Quota',135,y);doc.text('Ú. Pag.',170,y);
     y+=3;doc.setDrawColor(...LGRAY);doc.line(margin,y,W-margin,y);y+=5;
@@ -4003,13 +4008,13 @@ async function gerarPDFSocios(){
       doc.text(dataPag,170,y);
       y+=6;
     }
-    // Rodapé em todas as páginas
+    // Rodapé
     const pg=doc.internal.getNumberOfPages();
     for(let i=1;i<=pg;i++){
       doc.setPage(i);
       doc.setFillColor(...RED);doc.rect(0,285,W,12,'F');
       doc.setTextColor(...WHITE);doc.setFontSize(7);
-      doc.text(String(DB.config?.clube_nome||'Clube')+' — Sócios',margin,291);
+      doc.text(clubeNome+' — Sócios',margin,291);
       doc.text('Gerado '+new Date().toLocaleDateString('pt-PT')+' · '+i+'/'+pg,W-margin,291,{align:'right'});
     }
     doc.save('socios.pdf');
