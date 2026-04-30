@@ -197,6 +197,28 @@ textarea.form-input{resize:vertical;min-height:70px}
 .quota-paga{background:#D1FAE5;color:#065F46}
 .quota-falta{background:#FEE2E2;color:#991B1B}
 .quota-parcial{background:#FEF3C7;color:#92400E}
+.soc-mode-toggle{display:flex;gap:0;border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+.soc-mode-btn{flex:1;padding:7px 14px;font-size:12px;font-weight:600;background:#fff;border:none;cursor:pointer;color:var(--gray-500);transition:.15s}
+.soc-mode-btn.active{background:var(--primary);color:#fff}
+/* Modo Rápido */
+.soc-rapido-header{display:grid;grid-template-columns:32px 1fr 90px 90px 100px 110px 36px;gap:8px;padding:6px 12px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius) var(--radius) 0 0;font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.04em}
+.soc-rapido-row{display:grid;grid-template-columns:32px 1fr 90px 90px 100px 110px 36px;gap:8px;align-items:center;padding:7px 12px;border:1px solid var(--gray-100);border-top:none;background:#fff;font-size:12px;transition:.1s}
+.soc-rapido-row:hover{background:var(--gray-50)}
+.soc-rapido-row:last-child{border-radius:0 0 var(--radius) var(--radius)}
+.soc-rapido-cb{width:16px;height:16px;cursor:pointer;accent-color:var(--primary)}
+.soc-rapido-nome{font-weight:600;color:var(--gray-800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.soc-rapido-select{font-size:11px;padding:3px 4px;border:1px solid var(--gray-200);border-radius:4px;background:#fff;color:var(--gray-700);width:100%}
+.soc-rapido-date{font-size:11px;padding:3px 4px;border:1px solid var(--gray-200);border-radius:4px;background:#fff;color:var(--gray-700);width:100%}
+.soc-rapido-valor{font-size:11px;padding:3px 4px;border:1px solid var(--gray-200);border-radius:4px;background:#fff;color:var(--gray-700);width:72px}
+.soc-massa-bar{display:flex;gap:8px;align-items:center;padding:10px 12px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:var(--radius);margin-bottom:10px;flex-wrap:wrap}
+.soc-massa-label{font-size:12px;color:#1E40AF;font-weight:600}
+.soc-massa-select{font-size:12px;padding:5px 8px;border:1px solid #BFDBFE;border-radius:4px;background:#fff}
+.soc-massa-input{font-size:12px;padding:5px 8px;border:1px solid #BFDBFE;border-radius:4px;background:#fff;width:90px}
+.soc-massa-date{font-size:12px;padding:5px 8px;border:1px solid #BFDBFE;border-radius:4px;background:#fff}
+.soc-salvar-row{display:grid;grid-template-columns:32px 1fr 90px 90px 100px 110px 36px;gap:8px;align-items:center;padding:8px 12px;border:1px solid var(--gray-200);border-top:none;background:#F0FDF4;font-size:12px}
+.soc-rapido-save-btn{font-size:10px;padding:3px 6px;background:var(--primary);color:#fff;border:none;border-radius:4px;cursor:pointer}
+.soc-rapido-save-btn:hover{opacity:.85}
+.soc-row-changed{background:#FFFBEB!important;border-left:3px solid #F59E0B!important}
 .soc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
 /* ── Metodologia ── */
 .met-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
@@ -580,7 +602,13 @@ textarea.form-input{resize:vertical;min-height:70px}
           </div>
         </div>
         <div class="soc-stats" id="soc-stats"></div>
-        <div class="soc-filters">
+        <!-- Toggle modos -->
+        <div class="soc-mode-toggle">
+          <button class="soc-mode-btn active" id="soc-btn-gestao" onclick="setSocMode('gestao')">🗂️ Modo Gestão</button>
+          <button class="soc-mode-btn" id="soc-btn-rapido" onclick="setSocMode('rapido')">⚡ Modo Rápido</button>
+        </div>
+        <!-- Filtros (partilhados) -->
+        <div class="soc-filters" id="soc-filters-bar">
           <select class="form-input" id="soc-fil-estado" onchange="renderSocios()" style="max-width:150px">
             <option value="">Todos os estados</option>
             <option value="Activo">Activo</option>
@@ -600,7 +628,35 @@ textarea.form-input{resize:vertical;min-height:70px}
           </select>
           <input type="text" class="form-input" id="soc-search" onkeyup="renderSocios()" placeholder="🔍 Pesquisar…" style="max-width:200px">
         </div>
-        <div class="soc-grid" id="soc-grid"></div>
+        <!-- Modo Gestão -->
+        <div id="soc-modo-gestao">
+          <div class="soc-grid" id="soc-grid"></div>
+        </div>
+        <!-- Modo Rápido -->
+        <div id="soc-modo-rapido" style="display:none">
+          <!-- Barra de acções em massa -->
+          <div class="soc-massa-bar" id="soc-massa-bar" style="display:none">
+            <span class="soc-massa-label" id="soc-massa-count">0 seleccionados</span>
+            <span style="color:#93C5FD;font-size:11px">|</span>
+            <select class="soc-massa-select" id="soc-massa-quota">
+              <option value="">— Quota —</option>
+              <option value="Paga">Paga</option>
+              <option value="Em falta">Em Falta</option>
+              <option value="Parcial">Parcial</option>
+            </select>
+            <select class="soc-massa-select" id="soc-massa-estado">
+              <option value="">— Estado —</option>
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+              <option value="Pendente">Pendente</option>
+            </select>
+            <input type="number" class="soc-massa-input" id="soc-massa-valor" placeholder="€ Valor" min="0">
+            <input type="date" class="soc-massa-date" id="soc-massa-data">
+            <button class="btn btn-primary" style="font-size:12px;padding:5px 12px" onclick="aplicarMassa()">✅ Aplicar a todos</button>
+            <button class="btn" style="font-size:12px;padding:5px 10px;margin-left:auto" onclick="guardarModoRapido()">💾 Guardar alterações</button>
+          </div>
+          <div id="soc-rapido-lista"></div>
+        </div>
       </div>
     </main>
   </div>
@@ -3596,12 +3652,38 @@ async function confirmarImportCSV(){
   renderSocios();
 }
 
+/* ─── SÓCIOS ─── */
+let _socMode='gestao';
+let _socRapidoEdits={};
+
+function setSocMode(mode){
+  _socMode=mode;
+  document.getElementById('soc-btn-gestao').classList.toggle('active',mode==='gestao');
+  document.getElementById('soc-btn-rapido').classList.toggle('active',mode==='rapido');
+  document.getElementById('soc-modo-gestao').style.display=mode==='gestao'?'block':'none';
+  document.getElementById('soc-modo-rapido').style.display=mode==='rapido'?'block':'none';
+  if(mode==='rapido') _socRapidoEdits={};
+  renderSocios();
+}
+
+function _socFiltered(){
+  const lista=DB.socios||[];
+  const filEst=document.getElementById('soc-fil-estado')?.value||'';
+  const filQuota=document.getElementById('soc-fil-quota')?.value||'';
+  const filTipo=document.getElementById('soc-fil-tipo')?.value||'';
+  const search=(document.getElementById('soc-search')?.value||'').toLowerCase();
+  return lista.filter(s=>
+    (!filEst||s.estado===filEst)&&
+    (!filQuota||s.quota===filQuota)&&
+    (!filTipo||s.tipo===filTipo)&&
+    (!search||s.nome.toLowerCase().includes(search))
+  );
+}
+
 function renderSocios(){
   const isCoord=!currentUser?.grupos;
-  // Mostrar/ocultar nav
   document.querySelectorAll('[data-page="socios"]').forEach(el=>el.style.display=isCoord?'flex':'none');
   const lista=DB.socios||[];
-  // Stats
   const statsEl=document.getElementById('soc-stats');
   if(statsEl){
     const total=lista.length;
@@ -3612,22 +3694,18 @@ function renderSocios(){
       <div class="metric-card"><div class="metric-label">Total Sócios</div><div class="metric-value">${total}</div></div>
       <div class="metric-card"><div class="metric-label">Activos</div><div class="metric-value metric-ok">${ativos}</div></div>
       <div class="metric-card"><div class="metric-label">Em Falta</div><div class="metric-value ${devem>0?'metric-danger':''}">${devem}</div></div>
-      <div class="metric-card"><div class="metric-label">Receita</div><div class="metric-value">€${receita.toFixed(0)}</div></div>`;
+      <div class="metric-card"><div class="metric-label">Receita</div><div class="metric-value">\u20ac${receita.toFixed(0)}</div></div>`;
   }
+  if(_socMode==='gestao') _renderSociosGestao(isCoord);
+  else _renderSociosRapido(isCoord);
+}
+
+function _renderSociosGestao(isCoord){
   const grid=document.getElementById('soc-grid'); if(!grid)return;
-  const filEst=document.getElementById('soc-fil-estado')?.value||'';
-  const filQuota=document.getElementById('soc-fil-quota')?.value||'';
-  const filTipo=document.getElementById('soc-fil-tipo')?.value||'';
-  const search=(document.getElementById('soc-search')?.value||'').toLowerCase();
-  const filtered=lista.filter(s=>
-    (!filEst||s.estado===filEst)&&
-    (!filQuota||s.quota===filQuota)&&
-    (!filTipo||s.tipo===filTipo)&&
-    (!search||s.nome.toLowerCase().includes(search))
-  );
+  const filtered=_socFiltered();
   if(!filtered.length){
     grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray-400)">
-      <div style="font-size:36px;margin-bottom:8px">🏅</div>
+      <div style="font-size:36px;margin-bottom:8px">\ud83c\udfc5</div>
       <div>${isCoord?'Sem sócios. Clica em "+ Novo Sócio" para adicionar.':'Sem resultados.'}</div></div>`;
     return;
   }
@@ -3636,30 +3714,170 @@ function renderSocios(){
     const qCls=s.quota==='Paga'?'quota-paga':s.quota==='Em falta'?'quota-falta':'quota-parcial';
     const atleta=s.tipo==='atleta'&&s.atleta_id?DB.jogadores.find(x=>x.id===s.atleta_id):null;
     const editBtns=isCoord?`<div style="display:flex;gap:4px">
-      <button class="btn btn-sm" onclick="openModalSocio('${s.id}')" style="color:#2563EB;border-color:#BFDBFE">✏️</button>
-      <button class="btn btn-sm" onclick="deleteSocio('${s.id}')" style="color:#DC2626;border-color:#FCA5A5">🗑️</button>
+      <button class="btn btn-sm" onclick="openModalSocio('${s.id}')" style="color:#2563EB;border-color:#BFDBFE">\u270f\ufe0f</button>
+      <button class="btn btn-sm" onclick="deleteSocio('${s.id}')" style="color:#DC2626;border-color:#FCA5A5">\ud83d\uddd1\ufe0f</button>
     </div>`:'';
     return`<div class="soc-card">
       <div class="soc-card-header">
         <div>
-          <div class="soc-card-name">${s.nome}</div>
-          <div style="font-size:11px;color:var(--gray-400)">${s.tipo==='atleta'?'🏒 Atleta':'👤 Pai/Adepto'}${atleta?` — ${atleta.nome}`:''}</div>
+          <div class="soc-card-name">${s.nome}${s.num_socio?` <span style="font-size:10px;color:var(--gray-400);font-weight:400">#${s.num_socio}</span>`:''}</div>
+          <div style="font-size:11px;color:var(--gray-400)">${s.tipo==='atleta'?'\ud83c\udfd2 Atleta':'\ud83d\udc64 Pai/Adepto'}${atleta?` \u2014 ${atleta.nome}`:''}</div>
         </div>
         ${editBtns}
       </div>
       <div class="soc-card-body">
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
           <span class="badge ${estCls}">${s.estado}</span>
-          <span class="badge ${qCls}">💳 ${s.quota}</span>
+          <span class="badge ${qCls}">\ud83d\udcb3 ${s.quota}</span>
           ${s.periodo?`<span class="badge" style="background:var(--gray-50);color:var(--gray-500)">${s.periodo}</span>`:''}
         </div>
-        ${s.valor?`<div>Valor: <strong>€${s.valor}/${s.periodo||'período'}</strong></div>`:''}
+        ${s.valor?`<div>Valor: <strong>\u20ac${s.valor}/${s.periodo||'período'}</strong></div>`:''}
         ${s.ultimo_pag?`<div style="margin-top:4px">Último pag.: <strong>${new Date(s.ultimo_pag).toLocaleDateString('pt-PT')}</strong></div>`:''}
-        ${s.contacto?`<div style="margin-top:4px">📞 ${s.contacto}</div>`:''}
+        ${s.contacto?`<div style="margin-top:4px">\ud83d\udcde ${s.contacto}</div>`:''}
         ${s.obs?`<div style="margin-top:4px;color:var(--gray-400)">${s.obs}</div>`:''}
       </div>
     </div>`;
   }).join('');
+}
+
+function _renderSociosRapido(isCoord,keepSelected){
+  const lista=document.getElementById('soc-rapido-lista'); if(!lista)return;
+  // Guardar IDs seleccionados antes de re-renderizar
+  const selected=keepSelected||new Set([...document.querySelectorAll('.soc-row-cb:checked')].map(cb=>cb.dataset.id));
+  const filtered=_socFiltered();
+  if(!filtered.length){
+    lista.innerHTML=`<div style="text-align:center;padding:40px;color:var(--gray-400)"><div style="font-size:36px;margin-bottom:8px">\ud83c\udfc5</div><div>Sem resultados.</div></div>`;
+    document.getElementById('soc-massa-bar').style.display='none';
+    return;
+  }
+  _updateMassaBar();
+  const header=`<div class="soc-rapido-header">
+    <input type="checkbox" class="soc-rapido-cb" id="soc-cb-all" onchange="toggleAllSocios(this.checked)" title="Seleccionar todos">
+    <span>Nome</span><span>Estado</span><span>Quota</span><span>Valor \u20ac</span><span>Último Pag.</span><span></span>
+  </div>`;
+  const rows=filtered.map(s=>{
+    const e=_socRapidoEdits[s.id]||{};
+    const qVal=e.quota!==undefined?e.quota:s.quota||'Em falta';
+    const eVal=e.estado!==undefined?e.estado:s.estado||'Activo';
+    const vVal=e.valor!==undefined?e.valor:(s.valor||'');
+    const dVal=e.ultimo_pag!==undefined?e.ultimo_pag:(s.ultimo_pag||'');
+    const changed=Object.keys(e).length>0;
+    return`<div class="soc-rapido-row${changed?' soc-row-changed':''}">
+      <input type="checkbox" class="soc-rapido-cb soc-row-cb" data-id="${s.id}" onchange="_updateMassaBar()" ${selected.has(s.id)?'checked':''}>
+      <span class="soc-rapido-nome" title="${s.nome}">${s.nome}${s.num_socio?` <span style="font-size:10px;color:var(--gray-400)">#${s.num_socio}</span>`:''}</span>
+      <select class="soc-rapido-select" data-id="${s.id}" data-field="estado" onchange="_onRapidoChange(this)">
+        <option value="Activo" ${eVal==='Activo'?'selected':''}>Activo</option>
+        <option value="Inactivo" ${eVal==='Inactivo'?'selected':''}>Inactivo</option>
+        <option value="Pendente" ${eVal==='Pendente'?'selected':''}>Pendente</option>
+      </select>
+      <select class="soc-rapido-select" data-id="${s.id}" data-field="quota" onchange="_onRapidoChange(this)">
+        <option value="Paga" ${qVal==='Paga'?'selected':''}>Paga</option>
+        <option value="Em falta" ${qVal==='Em falta'?'selected':''}>Em Falta</option>
+        <option value="Parcial" ${qVal==='Parcial'?'selected':''}>Parcial</option>
+      </select>
+      <input type="number" class="soc-rapido-valor" value="${vVal}" placeholder="\u20ac" min="0" data-id="${s.id}" data-field="valor" onchange="_onRapidoChange(this)">
+      <input type="date" class="soc-rapido-date" value="${dVal}" data-id="${s.id}" data-field="ultimo_pag" onchange="_onRapidoChange(this)">
+      <button class="soc-rapido-save-btn" onclick="_guardarLinha('${s.id}')" title="Guardar este sócio">\ud83d\udcbe</button>
+    </div>`;
+  }).join('');
+  lista.innerHTML=header+rows;
+  _updateMassaBar();
+}
+
+function _onRapidoChange(el){
+  const id=el.dataset.id, field=el.dataset.field;
+  if(!_socRapidoEdits[id]) _socRapidoEdits[id]={};
+  _socRapidoEdits[id][field]=el.value;
+  el.closest('.soc-rapido-row')?.classList.add('soc-row-changed');
+}
+
+function _updateMassaBar(){
+  const bar=document.getElementById('soc-massa-bar');if(!bar)return;
+  const cbs=document.querySelectorAll('.soc-row-cb:checked');
+  const count=cbs.length;
+  if(count>0){
+    bar.style.display='flex';
+    document.getElementById('soc-massa-count').textContent=`${count} seleccionado${count!==1?'s':''}`;
+  } else {
+    bar.style.display='none';
+  }
+}
+
+function toggleAllSocios(checked){
+  document.querySelectorAll('.soc-row-cb').forEach(cb=>{cb.checked=checked;});
+  _updateMassaBar();
+}
+
+function aplicarMassa(){
+  const cbs=[...document.querySelectorAll('.soc-row-cb:checked')];
+  if(!cbs.length){toast('Nenhum sócio seleccionado');return;}
+  const quota=document.getElementById('soc-massa-quota').value;
+  const estado=document.getElementById('soc-massa-estado').value;
+  const valor=document.getElementById('soc-massa-valor').value;
+  const data=document.getElementById('soc-massa-data').value;
+  if(!quota&&!estado&&valor===''&&data===''){toast('Define pelo menos um campo para aplicar');return;}
+  const sel=new Set(cbs.map(cb=>cb.dataset.id));
+  cbs.forEach(cb=>{
+    const id=cb.dataset.id;
+    if(!_socRapidoEdits[id]) _socRapidoEdits[id]={};
+    if(quota) _socRapidoEdits[id].quota=quota;
+    if(estado) _socRapidoEdits[id].estado=estado;
+    if(valor!=='') _socRapidoEdits[id].valor=valor;
+    if(data!=='') _socRapidoEdits[id].ultimo_pag=data;
+  });
+  document.getElementById('soc-massa-quota').value='';
+  document.getElementById('soc-massa-estado').value='';
+  document.getElementById('soc-massa-valor').value='';
+  document.getElementById('soc-massa-data').value='';
+  _renderSociosRapido(!currentUser?.grupos,sel);
+  toast(`\u2705 Campos aplicados a ${cbs.length} sócio${cbs.length!==1?'s':''}. Clica "\ud83d\udcbe Guardar alterações" para confirmar.`);
+}
+
+async function _guardarLinha(id){
+  const e=_socRapidoEdits[id]; if(!e||!Object.keys(e).length){toast('Sem alterações neste sócio');return;}
+  const rec={};
+  if(e.quota!==undefined) rec.quota=e.quota;
+  if(e.estado!==undefined) rec.estado=e.estado;
+  if(e.valor!==undefined) rec.valor=parseFloat(e.valor)||null;
+  if(e.ultimo_pag!==undefined) rec.ultimo_pag=e.ultimo_pag||null;
+  showLoading(true);
+  await sb.from('socios').update(rec).eq('id',id);
+  const idx=(DB.socios||[]).findIndex(x=>x.id===id);
+  if(idx>=0) DB.socios[idx]={...DB.socios[idx],...rec};
+  delete _socRapidoEdits[id];
+  showLoading(false);
+  toast('\u2705 Sócio guardado!');
+  _renderSociosRapido(!currentUser?.grupos,new Set());
+}
+
+async function guardarModoRapido(){
+  const ids=Object.keys(_socRapidoEdits);
+  if(!ids.length){toast('Sem alterações para guardar');return;}
+  showLoading(true);
+  let ok=0,err=0;
+  for(const id of ids){
+    const e=_socRapidoEdits[id];
+    const rec={};
+    if(e.quota!==undefined) rec.quota=e.quota;
+    if(e.estado!==undefined) rec.estado=e.estado;
+    if(e.valor!==undefined) rec.valor=parseFloat(e.valor)||null;
+    if(e.ultimo_pag!==undefined) rec.ultimo_pag=e.ultimo_pag||null;
+    const {error}=await sb.from('socios').update(rec).eq('id',id);
+    if(error){err++;}else{
+      const idx=(DB.socios||[]).findIndex(x=>x.id===id);
+      if(idx>=0) DB.socios[idx]={...DB.socios[idx],...rec};
+      ok++;
+    }
+  }
+  _socRapidoEdits={};
+  showLoading(false);
+  toast(`\u2705 ${ok} sócio${ok!==1?'s':''} guardado${ok!==1?'s':''}${err?` \u00b7 ${err} erro${err!==1?'s':''}`:''}`);
+  renderSocios();
+}
+
+function _nextNumSocio(){
+  const nums=(DB.socios||[]).map(s=>parseInt(s.num_socio)||0);
+  return nums.length?Math.max(...nums)+1:1;
 }
 
 function openModalSocio(id){
@@ -3668,7 +3886,7 @@ function openModalSocio(id){
   const s=id?(DB.socios||[]).find(x=>x.id===id):null;
   document.getElementById('soc-edit-id').value=id||'';
   document.getElementById('modal-soc-title').textContent=s?'Editar Sócio':'Novo Sócio';
-  document.getElementById('soc-num').value=s?s.num_socio||'':'';
+  document.getElementById('soc-num').value=s?s.num_socio||'':_nextNumSocio();
   document.getElementById('soc-nome').value=s?s.nome||'':'';
   document.getElementById('soc-tipo').value=s?s.tipo||'atleta':'atleta';
   document.getElementById('soc-estado').value=s?s.estado||'Activo':'Activo';
@@ -3746,41 +3964,60 @@ async function deleteSocio(id){
 async function gerarPDFSocios(){
   const lista=DB.socios||[];
   if(!lista.length){toast('Sem sócios para exportar');return;}
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const W=210,margin=16,cW=W-margin*2;
-  const RED=[139,26,26],GRAY=[107,114,128],LGRAY=[243,244,246],WHITE=[255,255,255],BLK=[17,24,39];
-  doc.setFillColor(...RED);doc.rect(0,0,W,22,'F');
-  doc.setTextColor(...WHITE);doc.setFontSize(14);doc.setFont('helvetica','bold');
-  doc.text(DB.config?.clube_nome||'Clube',W/2,9,{align:'center'});
-  doc.setFontSize(8);doc.setFont('helvetica','normal');
-  doc.text('Lista de Sócios',W/2,15,{align:'center'});
-  let y=30;
-  doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...BLK);
-  doc.text('Nome',margin,y);doc.text('Estado',90,y);doc.text('Quota',130,y);doc.text('Ú. Pag.',165,y);
-  y+=3;doc.setDrawColor(...LGRAY);doc.line(margin,y,W-margin,y);y+=5;
-  doc.setFont('helvetica','normal');
-  lista.sort((a,b)=>a.nome.localeCompare(b.nome)).forEach(s=>{
-    if(y>270){doc.addPage();y=20;}
-    doc.setTextColor(...BLK);doc.text(s.nome.substring(0,32),margin,y);
-    doc.setTextColor(s.estado==='Activo'?[6,95,70]:s.estado==='Inactivo'?[107,114,128]:[146,64,14]);
-    doc.text(s.estado,90,y);
-    doc.setTextColor(s.quota==='Paga'?[6,95,70]:s.quota==='Em falta'?[153,27,27]:[146,64,14]);
-    doc.text(s.quota,130,y);
-    doc.setTextColor(...GRAY);
-    doc.text(s.ultimo_pag?new Date(s.ultimo_pag).toLocaleDateString('pt-PT'):'—',165,y);
-    y+=6;
-  });
-  const pg=doc.internal.getNumberOfPages();
-  for(let i=1;i<=pg;i++){
-    doc.setPage(i);
-    doc.setFillColor(...RED);doc.rect(0,285,W,12,'F');
-    doc.setTextColor(...WHITE);doc.setFontSize(7);
-    doc.text(`${DB.config?.clube_nome||'Clube'} — Sócios`,margin,291);
-    doc.text(`Gerado ${new Date().toLocaleDateString('pt-PT')} · ${i}/${pg}`,W-margin,291,{align:'right'});
+  try{
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const W=210,margin=16;
+    const RED=[139,26,26],GRAY=[107,114,128],LGRAY=[243,244,246],WHITE=[255,255,255],BLK=[17,24,39];
+    // Cabeçalho
+    doc.setFillColor(...RED);doc.rect(0,0,W,22,'F');
+    doc.setTextColor(...WHITE);doc.setFontSize(14);doc.setFont('helvetica','bold');
+    doc.text(String(DB.config?.clube_nome||'Clube'),W/2,9,{align:'center'});
+    doc.setFontSize(8);doc.setFont('helvetica','normal');
+    doc.text('Lista de Sócios',W/2,15,{align:'center'});
+    // Cabeçalho tabela
+    let y=30;
+    doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...BLK);
+    doc.text('Nº / Nome',margin,y);doc.text('Estado',95,y);doc.text('Quota',135,y);doc.text('Ú. Pag.',170,y);
+    y+=3;doc.setDrawColor(...LGRAY);doc.line(margin,y,W-margin,y);y+=5;
+    doc.setFont('helvetica','normal');
+    // Linhas
+    const sorted=[...lista].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||'')));
+    for(const s of sorted){
+      if(y>270){doc.addPage();y=20;}
+      const nome=String(s.nome||'—').substring(0,30);
+      const numS=s.num_socio?String(s.num_socio)+' ':'';
+      const estado=String(s.estado||'—');
+      const quota=String(s.quota||'—');
+      let dataPag='—';
+      try{if(s.ultimo_pag&&s.ultimo_pag!==''){dataPag=new Date(s.ultimo_pag).toLocaleDateString('pt-PT');if(dataPag==='Invalid Date')dataPag='—';}}catch(_){}
+      const corEstado=estado==='Activo'?[6,95,70]:estado==='Inactivo'?[107,114,128]:[146,64,14];
+      const corQuota=quota==='Paga'?[6,95,70]:quota==='Em falta'?[153,27,27]:[146,64,14];
+      doc.setTextColor(...BLK);
+      doc.text(numS+nome,margin,y);
+      doc.setTextColor(...corEstado);
+      doc.text(estado,95,y);
+      doc.setTextColor(...corQuota);
+      doc.text(quota,135,y);
+      doc.setTextColor(...GRAY);
+      doc.text(dataPag,170,y);
+      y+=6;
+    }
+    // Rodapé em todas as páginas
+    const pg=doc.internal.getNumberOfPages();
+    for(let i=1;i<=pg;i++){
+      doc.setPage(i);
+      doc.setFillColor(...RED);doc.rect(0,285,W,12,'F');
+      doc.setTextColor(...WHITE);doc.setFontSize(7);
+      doc.text(String(DB.config?.clube_nome||'Clube')+' — Sócios',margin,291);
+      doc.text('Gerado '+new Date().toLocaleDateString('pt-PT')+' · '+i+'/'+pg,W-margin,291,{align:'right'});
+    }
+    doc.save('socios.pdf');
+    toast('📄 PDF de sócios gerado!');
+  }catch(err){
+    console.error('PDF Sócios erro:',err);
+    toast('❌ Erro ao gerar PDF: '+err.message);
   }
-  doc.save('socios.pdf');
-  toast('📄 PDF de sócios gerado!');
 }
 async function deleteMetodologia(id){
   if(!confirm('Apagar esta secção?'))return;
