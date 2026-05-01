@@ -196,6 +196,20 @@ textarea.form-input{resize:vertical;min-height:70px}
 .soc-badge-pendente{background:#FEF3C7;color:#92400E;border:none}
 .quota-paga{background:#D1FAE5;color:#065F46}
 .quota-falta{background:#FEE2E2;color:#991B1B}
+/* ── Comunicados ── */
+.com-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:8px;background:var(--gray-50);border:1px solid var(--gray-200);border-bottom:none;border-radius:var(--radius) var(--radius) 0 0}
+.com-btn{padding:4px 9px;font-size:12px;font-weight:600;background:#fff;border:1px solid var(--gray-200);border-radius:4px;cursor:pointer;color:var(--gray-700);transition:.15s;font-family:inherit}
+.com-btn:hover{background:var(--gray-100)}
+.com-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.com-btn-sep{width:1px;background:var(--gray-200);margin:2px 4px}
+.com-editor{min-height:420px;padding:20px;border:1px solid var(--gray-200);border-radius:0 0 var(--radius) var(--radius);background:#fff;font-size:14px;line-height:1.7;color:var(--gray-800);outline:none;font-family:'DM Sans',sans-serif}
+.com-editor:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(139,26,26,.08)}
+.com-editor table{border-collapse:collapse;width:100%;margin:12px 0}
+.com-editor td,.com-editor th{border:1px solid var(--gray-300);padding:6px 10px;min-width:60px}
+.com-editor th{background:var(--gray-50);font-weight:700}
+.com-assunto{width:100%;padding:9px 12px;border:1px solid var(--gray-200);border-radius:var(--radius);font-size:14px;font-family:'DM Sans',sans-serif;margin-bottom:10px;color:var(--gray-800)}
+.com-assunto:focus{outline:none;border-color:var(--primary)}
+
 .quota-parcial{background:#FEF3C7;color:#92400E}
 .soc-mode-toggle{display:flex;gap:0;border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
 .soc-mode-btn{flex:1;padding:7px 14px;font-size:12px;font-weight:600;background:#fff;border:none;cursor:pointer;color:var(--gray-500);transition:.15s}
@@ -306,6 +320,7 @@ textarea.form-input{resize:vertical;min-height:70px}
       <div class="nav-section">Jogo</div>
       <div class="nav-item" data-page="jogo"><span class="nav-icon">🏒</span>Jogo ao Vivo</div>
       <div class="nav-section coord-only" style="display:none">Administração</div>
+      <div class="nav-item coord-only" data-page="comunicados" style="display:none"><span class="nav-icon">📢</span>Comunicados</div>
       <div class="nav-item coord-only" data-page="socios" style="display:none"><span class="nav-icon">🏅</span>Sócios</div>
       <div class="nav-item coord-only" data-page="admin" style="display:none"><span class="nav-icon">⚙️</span>Administração</div>
     </nav>
@@ -592,6 +607,46 @@ textarea.form-input{resize:vertical;min-height:70px}
       </div>
 
       <!-- ── SÓCIOS ── -->
+      <div id="page-comunicados" class="page">
+        <div class="page-header">
+          <div><div class="page-title">Comunicados</div><div class="page-sub">Escreve e exporta comunicados para os pais</div></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn" onclick="comLimpar()">🗑️ Limpar</button>
+            <button class="btn btn-primary" onclick="comGerarPDF()">📄 Gerar PDF</button>
+          </div>
+        </div>
+        <input type="text" class="com-assunto" id="com-assunto" placeholder="Assunto / Título do comunicado…">
+        <div class="com-toolbar">
+          <button class="com-btn" onclick="comCmd('bold')" title="Negrito"><b>N</b></button>
+          <button class="com-btn" onclick="comCmd('italic')" title="Itálico"><i>I</i></button>
+          <button class="com-btn" onclick="comCmd('underline')" title="Sublinhado"><u>S</u></button>
+          <div class="com-btn-sep"></div>
+          <button class="com-btn" onclick="comCmd('justifyLeft')" title="Alinhar esquerda">⬅</button>
+          <button class="com-btn" onclick="comCmd('justifyCenter')" title="Centrar">☰</button>
+          <button class="com-btn" onclick="comCmd('justifyRight')" title="Alinhar direita">➡</button>
+          <button class="com-btn" onclick="comCmd('justifyFull')" title="Justificar">▤</button>
+          <div class="com-btn-sep"></div>
+          <button class="com-btn" onclick="comCmd('insertUnorderedList')" title="Lista">• Lista</button>
+          <button class="com-btn" onclick="comCmd('insertOrderedList')" title="Lista numerada">1. Lista</button>
+          <div class="com-btn-sep"></div>
+          <button class="com-btn" onclick="comInsertTable()" title="Inserir tabela">⊞ Tabela</button>
+          <div class="com-btn-sep"></div>
+          <select class="com-btn" onchange="comCmd('fontSize',this.value);this.value=''" style="width:90px">
+            <option value="">Tamanho</option>
+            <option value="2">Pequeno</option>
+            <option value="3">Normal</option>
+            <option value="4">Médio</option>
+            <option value="5">Grande</option>
+            <option value="6">Título</option>
+          </select>
+          <div class="com-btn-sep"></div>
+          <button class="com-btn" onclick="comCmd('removeFormat')" title="Limpar formatação">✕ Formato</button>
+        </div>
+        <div class="com-editor" id="com-editor" contenteditable="true" spellcheck="true">
+          <p>Caros pais,</p><p><br></p><p></p>
+        </div>
+      </div>
+
       <div id="page-socios" class="page">
         <div class="page-header">
           <div><div class="page-title">Gestão de Sócios</div><div class="page-sub">Atletas e membros do clube</div></div>
@@ -1234,7 +1289,7 @@ document.querySelectorAll('.nav-item[data-page]').forEach(el=>{
   });
 });
 function renderPage(p){
-  const map={dashboard:renderDashboard,presencas:renderPresencas,jogadores:renderJogadores,sessoes:renderSessoes,ficha:renderFichaPage,avaliacao:renderAvaliacao,relatorio:renderRelatorio,convocatoria:renderConvocatoria,jogo:renderJogoAoVivo,admin:renderAdmin,treinos:renderTreinos,metodologia:renderMetodologia,socios:renderSocios};
+  const map={dashboard:renderDashboard,presencas:renderPresencas,jogadores:renderJogadores,sessoes:renderSessoes,ficha:renderFichaPage,avaliacao:renderAvaliacao,relatorio:renderRelatorio,convocatoria:renderConvocatoria,jogo:renderJogoAoVivo,admin:renderAdmin,treinos:renderTreinos,metodologia:renderMetodologia,socios:renderSocios,comunicados:()=>{}};
   if(map[p])map[p]();
 }
 function buildGrupoTabs(cid,pageKey){
@@ -3650,6 +3705,162 @@ async function confirmarImportCSV(){
   _csvPendente=[];
   toast(`✅ ${ok} sócios importados${err?` · ${err} erros`:''}!`);
   renderSocios();
+}
+
+/* ─── COMUNICADOS ─── */
+function comCmd(cmd,val){
+  document.getElementById('com-editor').focus();
+  document.execCommand(cmd,false,val||null);
+}
+
+function comInsertTable(){
+  const cols=parseInt(prompt('Número de colunas:',2));
+  const rows=parseInt(prompt('Número de linhas (sem cabeçalho):',3));
+  if(!cols||!rows||isNaN(cols)||isNaN(rows))return;
+  let html='<table><thead><tr>';
+  for(let c=0;c<cols;c++) html+=`<th>Coluna ${c+1}</th>`;
+  html+='</tr></thead><tbody>';
+  for(let r=0;r<rows;r++){
+    html+='<tr>';
+    for(let c=0;c<cols;c++) html+='<td>&nbsp;</td>';
+    html+='</tr>';
+  }
+  html+='</tbody></table><p><br></p>';
+  document.getElementById('com-editor').focus();
+  document.execCommand('insertHTML',false,html);
+}
+
+function comLimpar(){
+  if(!confirm('Limpar o comunicado?')) return;
+  document.getElementById('com-assunto').value='';
+  document.getElementById('com-editor').innerHTML='<p>Caros pais,</p><p><br></p><p></p>';
+}
+
+async function comGerarPDF(){
+  const assunto=document.getElementById('com-assunto').value.trim()||'Comunicado';
+  const editorEl=document.getElementById('com-editor');
+  const htmlContent=editorEl.innerHTML;
+  if(!htmlContent.trim()||editorEl.innerText.trim().length<3){toast('Escreve o comunicado antes de gerar o PDF');return;}
+  try{
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const W=210,margin=16;
+    const RED=[139,26,26],WHITE=[255,255,255],GRAY=[107,114,128],BLK=[17,24,39];
+    const clubeNome=String(DB.config?.clube_nome||document.querySelector('.topbar-title')?.textContent||'Clube');
+    const epoca=String(DB.config?.epoca||'2025/2026');
+    // Cabeçalho igual à ficha clínica
+    const logoCircular=await makeCircularLogo(LOGO_B64,600).catch(()=>null);
+    doc.setFillColor(...RED);doc.rect(0,0,W,26,'F');
+    try{if(logoCircular)doc.addImage(logoCircular,'PNG',margin,3,20,20);else doc.addImage(LOGO_B64,'JPEG',margin,3,20,20);}catch(e){}
+    doc.setTextColor(...WHITE);doc.setFontSize(15);doc.setFont('helvetica','bold');
+    doc.text(clubeNome+' — Comunicação',margin+24,11);
+    doc.setFontSize(9);doc.setFont('helvetica','normal');
+    doc.text('Época '+epoca+' · '+new Date().toLocaleDateString('pt-PT'),margin+24,18);
+    // Assunto
+    let y=34;
+    doc.setTextColor(...BLK);doc.setFontSize(13);doc.setFont('helvetica','bold');
+    doc.text(assunto,margin,y);
+    y+=8;
+    doc.setDrawColor(...RED);doc.setLineWidth(.5);doc.line(margin,y,W-margin,y);
+    y+=8;
+    // Conteúdo — converter HTML para texto estruturado
+    doc.setFont('helvetica','normal');doc.setFontSize(11);doc.setTextColor(...BLK);
+    const tmp=document.createElement('div');
+    tmp.innerHTML=htmlContent;
+    // Processar nós
+    function processNode(node){
+      if(y>272){doc.addPage();y=20;}
+      if(node.nodeType===3){// texto
+        const txt=node.textContent;
+        if(!txt.trim())return;
+        const lines=doc.splitTextToSize(txt,W-margin*2);
+        doc.text(lines,margin,y);
+        y+=lines.length*6;
+      } else if(node.tagName){
+        const tag=node.tagName.toLowerCase();
+        if(tag==='table'){
+          processTable(node);
+        } else if(tag==='b'||tag==='strong'){
+          doc.setFont('helvetica','bold');
+          processChildren(node);
+          doc.setFont('helvetica','normal');
+        } else if(tag==='i'||tag==='em'){
+          doc.setFont('helvetica','bolditalic');
+          processChildren(node);
+          doc.setFont('helvetica','normal');
+        } else if(tag==='u'){
+          processChildren(node);
+        } else if(tag==='br'){
+          y+=5;
+        } else if(tag==='li'){
+          const txt='• '+node.innerText;
+          const lines=doc.splitTextToSize(txt,W-margin*2-4);
+          doc.text(lines,margin+4,y);
+          y+=lines.length*6+1;
+        } else if(tag==='p'||tag==='div'){
+          if(node.innerText.trim()){
+            // Verificar alinhamento
+            const align=node.style.textAlign||'left';
+            const txt=node.innerText;
+            const lines=doc.splitTextToSize(txt,W-margin*2);
+            if(align==='center') lines.forEach(l=>{doc.text(l,W/2,y,{align:'center'});y+=6;});
+            else if(align==='right') lines.forEach(l=>{doc.text(l,W-margin,y,{align:'right'});y+=6;});
+            else{doc.text(lines,margin,y);y+=lines.length*6;}
+          } else {y+=4;}
+        } else {
+          processChildren(node);
+        }
+      }
+    }
+    function processChildren(node){
+      node.childNodes.forEach(processNode);
+    }
+    function processTable(tbl){
+      if(y>250){doc.addPage();y=20;}
+      const rows=[...tbl.querySelectorAll('tr')];
+      if(!rows.length)return;
+      const cols=rows[0].querySelectorAll('td,th').length||1;
+      const colW=(W-margin*2)/cols;
+      rows.forEach((row,ri)=>{
+        if(y>272){doc.addPage();y=20;}
+        const cells=[...row.querySelectorAll('td,th')];
+        const isHeader=row.querySelector('th')!==null;
+        const rowH=8;
+        if(isHeader){doc.setFillColor(243,244,246);doc.setFont('helvetica','bold');}
+        else{doc.setFillColor(255,255,255);doc.setFont('helvetica','normal');}
+        cells.forEach((cell,ci)=>{
+          const x=margin+ci*colW;
+          doc.setDrawColor(209,213,219);
+          doc.rect(x,y-5,colW,rowH);
+          if(isHeader)doc.setFillColor(243,244,246);
+          doc.setFillColor(...(isHeader?[243,244,246]:[255,255,255]));
+          doc.rect(x,y-5,colW,rowH,'F');
+          doc.setDrawColor(209,213,219);doc.rect(x,y-5,colW,rowH,'S');
+          doc.setTextColor(...BLK);
+          const txt=String(cell.innerText||'').trim();
+          doc.text(txt.substring(0,Math.floor(colW/2)),x+2,y,{maxWidth:colW-4});
+        });
+        y+=rowH;
+      });
+      doc.setFont('helvetica','normal');
+      y+=4;
+    }
+    processChildren(tmp);
+    // Rodapé
+    const pg=doc.internal.getNumberOfPages();
+    for(let i=1;i<=pg;i++){
+      doc.setPage(i);
+      doc.setFillColor(...RED);doc.rect(0,285,W,12,'F');
+      doc.setTextColor(...WHITE);doc.setFontSize(7);doc.setFont('helvetica','normal');
+      doc.text('GestiOK · '+clubeNome,margin,291);
+      doc.text(i+'/'+pg,W-margin,291,{align:'right'});
+    }
+    doc.save('comunicado_'+assunto.replace(/\s+/g,'_').toLowerCase()+'.pdf');
+    toast('📄 Comunicado exportado!');
+  }catch(err){
+    console.error('PDF Comunicado erro:',err);
+    toast('❌ Erro ao gerar PDF: '+err.message);
+  }
 }
 
 /* ─── SÓCIOS ─── */
