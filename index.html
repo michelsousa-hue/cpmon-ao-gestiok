@@ -305,6 +305,14 @@ textarea.form-input{resize:vertical;min-height:70px}
   </div>
   <div class="app-body">
     <nav class="sidebar" id="sidebar">
+      <div class="nav-section admin-only" style="display:none">Administração</div>
+      <div class="nav-item admin-only" data-page="admin" style="display:none"><span class="nav-icon">⚙️</span>Administração</div>
+      <div class="nav-section tesour-only" style="display:none">Tesouraria</div>
+      <div class="nav-item tesour-only" data-page="comunicados" style="display:none"><span class="nav-icon">📢</span>Comunicados</div>
+      <div class="nav-item tesour-only" data-page="socios" style="display:none"><span class="nav-icon">🏅</span>Sócios</div>
+      <div class="nav-item tesour-only" data-page="caixa" style="display:none"><span class="nav-icon">💰</span>Fluxo de Caixa</div>
+      <div class="nav-section coord-only" style="display:none">Coordenação</div>
+      <div class="nav-item coord-only" data-page="comunicados" style="display:none"><span class="nav-icon">📢</span>Comunicados</div>
       <div class="nav-section">Principal</div>
       <div class="nav-item active" data-page="dashboard"><span class="nav-icon">📊</span>Dashboard</div>
       <div class="nav-item" data-page="presencas"><span class="nav-icon">✅</span>Presenças</div>
@@ -323,7 +331,7 @@ textarea.form-input{resize:vertical;min-height:70px}
       <div class="nav-item coord-only" data-page="comunicados" style="display:none"><span class="nav-icon">📢</span>Comunicados</div>
       <div class="nav-item coord-only" data-page="socios" style="display:none"><span class="nav-icon">🏅</span>Sócios</div>
       <div class="nav-item coord-only" data-page="admin" style="display:none"><span class="nav-icon">⚙️</span>Administração</div>
-    </nav>
+      </nav>
     <main class="main">
       <div id="page-dashboard" class="page active">
         <div class="page-header">
@@ -590,10 +598,24 @@ textarea.form-input{resize:vertical;min-height:70px}
           <button class="btn btn-primary" onclick="openModalDelegado()" style="font-size:13px">+ Novo Delegado</button>
         </div>
         <div class="card" style="margin-top:12px">
-          <div class="card-title" style="margin-bottom:12px">👥 Perfis de Treinador</div>
+          <div class="card-title" style="margin-bottom:8px">🎯 Coordenador Técnico</div>
+          <div style="font-size:12px;color:var(--gray-500);margin-bottom:10px">Acesso completo à modalidade sem administração e tesouraria.</div>
+          <div id="admin-coordtec-list" style="margin-bottom:12px"></div>
+          <button class="btn" onclick="openModalPerfil('__coord__')" style="font-size:13px;background:#EDE9FE;color:#5B21B6;border-color:#C4B5FD">+ Novo Coord. Técnico</button>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <div class="card-title" style="margin-bottom:12px">🏒 Perfis de Treinador</div>
           <div id="admin-perfis-list" style="margin-bottom:12px"></div>
           <button class="btn btn-primary" onclick="openModalPerfil()" style="font-size:13px">+ Novo Perfil</button>
         </div>
+        <div class="card" style="margin-top:12px">
+          <div class="card-title" style="margin-bottom:8px">💰 Tesoureiro</div>
+          <div style="font-size:12px;color:var(--gray-500);margin-bottom:10px">Acesso a Sócios, Fluxo de Caixa e Comunicados. Criado pela coordenação.</div>
+          <div id="admin-tesour-list" style="margin-bottom:12px"></div>
+          <button class="btn" onclick="openModalPerfil('__tesoureiro__')" style="font-size:13px;background:#ECFDF5;color:#166534;border-color:#86EFAC">+ Novo Tesoureiro</button>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <div class="card-title" style="margin-bottom:12px">🏒 Grupos / Escalões</div>
         <div class="card" style="margin-top:12px">
           <div class="card-title" style="margin-bottom:12px">🏒 Grupos / Escalões</div>
           <div id="admin-grupos-list" style="margin-bottom:12px"></div>
@@ -653,7 +675,8 @@ textarea.form-input{resize:vertical;min-height:70px}
           <div style="display:flex;gap:8px">
             <button class="btn btn-primary" onclick="openModalSocio()">+ Novo Sócio</button>
             <label class="btn" style="cursor:pointer;background:#EFF6FF;color:#1E40AF;border-color:#BFDBFE">📥 Importar CSV<input type="file" accept=".csv" style="display:none" onchange="importarCSVSocios(this)"></label>
-            <button class="btn" onclick="gerarPDFSocios()">📄 PDF</button>
+            <button class="btn" onclick="gerarPDFSocios()">📄 PDF Lista</button>
+            <button class="btn" onclick="gerarCartoesSocios()" style="background:#ECFDF5;color:#166534;border-color:#86EFAC">🪪 Cartões</button>
           </div>
         </div>
         <div class="soc-stats" id="soc-stats"></div>
@@ -713,7 +736,109 @@ textarea.form-input{resize:vertical;min-height:70px}
           <div id="soc-rapido-lista"></div>
         </div>
       </div>
+      <!-- ── FLUXO DE CAIXA ── -->
+      <div id="page-caixa" class="page">
+        <div class="page-header">
+          <div><div class="page-title">💰 Fluxo de Caixa</div><div class="page-sub">Receitas, despesas e balanço por época</div></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn" onclick="openModalCaixaCategoria()" style="background:#F0FDF4;color:#166534;border-color:#86EFAC">⚙️ Categorias</button>
+            <button class="btn btn-primary" onclick="openModalMovimento()">+ Movimento</button>
+            <button class="btn" onclick="gerarPDFCaixa()">📄 Relatório PDF</button>
+          </div>
+        </div>
+        <!-- Resumo por conta -->
+        <div class="metrics-grid" id="caixa-resumo"></div>
+        <!-- Filtros -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
+          <select class="form-input" id="caixa-fil-conta" onchange="renderCaixa()" style="max-width:160px">
+            <option value="">Todas as contas</option>
+            <option value="oficial">Conta Oficial</option>
+            <option value="diario">Dia-a-Dia</option>
+          </select>
+          <select class="form-input" id="caixa-fil-tipo" onchange="renderCaixa()" style="max-width:150px">
+            <option value="">Receitas e Despesas</option>
+            <option value="receita">Receitas</option>
+            <option value="despesa">Despesas</option>
+          </select>
+          <select class="form-input" id="caixa-fil-epoca" onchange="renderCaixa()" style="max-width:160px" id="caixa-fil-epoca"></select>
+          <input type="text" class="form-input" id="caixa-search" onkeyup="renderCaixa()" placeholder="🔍 Pesquisar…" style="max-width:200px">
+        </div>
+        <!-- Lista movimentos -->
+        <div class="card" style="padding:0;overflow:hidden">
+          <div id="caixa-lista"></div>
+        </div>
+      </div>
     </main>
+  </div>
+</div>
+
+<!-- MODAL MOVIMENTO CAIXA -->
+<div id="modal-movimento" class="modal-bg">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header"><span class="modal-title" id="mov-modal-title">Novo Movimento</span><button class="modal-close" onclick="closeModal('modal-movimento')">✕</button></div>
+    <input type="hidden" id="mov-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Tipo</label>
+        <select class="form-input" id="mov-tipo" onchange="updateMovCategorias()">
+          <option value="receita">Receita</option>
+          <option value="despesa">Despesa</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Conta</label>
+        <select class="form-input" id="mov-conta">
+          <option value="oficial">Conta Oficial</option>
+          <option value="diario">Dia-a-Dia</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Data</label><input type="date" class="form-input" id="mov-data"></div>
+      <div class="form-group"><label class="form-label">Valor (€)</label><input type="number" class="form-input" id="mov-valor" min="0" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px"><label class="form-label">Categoria</label>
+      <select class="form-input" id="mov-categoria"></select>
+    </div>
+    <div class="form-group" style="margin-bottom:10px"><label class="form-label">Descrição</label><input type="text" class="form-input" id="mov-descricao" placeholder="ex: Quotas de Março"></div>
+    <div class="form-group" style="margin-bottom:16px"><label class="form-label">Época</label>
+      <select class="form-input" id="mov-epoca"></select>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveMovimento()">Guardar</button>
+      <button class="btn" onclick="closeModal('modal-movimento')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CATEGORIAS CAIXA -->
+<div id="modal-caixa-cat" class="modal-bg">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header"><span class="modal-title">⚙️ Categorias</span><button class="modal-close" onclick="closeModal('modal-caixa-cat')">✕</button></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:8px;text-transform:uppercase">📈 Receitas</div>
+        <div id="cat-receitas-list" style="margin-bottom:10px"></div>
+        <div style="display:flex;gap:6px">
+          <input type="text" class="form-input" id="cat-nova-receita" placeholder="Nova categoria…" style="font-size:12px">
+          <button class="btn btn-sm btn-green" onclick="addCategoria('receita')">+</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:600;color:#DC2626;margin-bottom:8px;text-transform:uppercase">📉 Despesas</div>
+        <div id="cat-despesas-list" style="margin-bottom:10px"></div>
+        <div style="display:flex;gap:6px">
+          <input type="text" class="form-input" id="cat-nova-despesa" placeholder="Nova categoria…" style="font-size:12px">
+          <button class="btn btn-sm btn-primary" onclick="addCategoria('despesa')">+</button>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--gray-200)">
+      <div style="font-size:12px;font-weight:600;color:var(--gray-600);margin-bottom:10px;text-transform:uppercase">📅 Transição de Época</div>
+      <div style="font-size:13px;color:var(--gray-500);margin-bottom:10px">Transfere o saldo actual para a nova época, mantendo histórico consultável.</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" class="form-input" id="nova-epoca-nome" placeholder="ex: 2026/2027" style="max-width:160px">
+        <button class="btn btn-primary" onclick="fecharEpoca()">Fechar Época e Transitar Saldo</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -891,7 +1016,9 @@ textarea.form-input{resize:vertical;min-height:70px}
     </div>
     <div class="form-group" style="margin-bottom:10px"><label class="form-label">Escalões (pode selecionar mais do que um)</label>
       <div id="perfil-grupos-checks" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px"></div>
-      <div style="margin-top:6px"><label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" id="perfil-acesso-total"> <span style="color:var(--gray-500)">Acesso total (Coordenador)</span></label></div>
+      <div style="margin-top:6px"><label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" id="perfil-coord"> <span style="color:var(--gray-500)">🎯 Coordenador Técnico (Modalidade completa)</span></label></div>
+      <div style="margin-top:4px"><label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" id="perfil-acesso-total" style="display:none"> </label></div>
+      <div style="margin-top:4px"><label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" id="perfil-tesoureiro"> <span style="color:var(--gray-500)">💰 Tesoureiro (Sócios + Caixa + Comunicados)</span></label></div>
     </div>
     <div class="form-group" style="margin-bottom:16px"><label class="form-label">PIN (4 dígitos)</label><input type="password" class="form-input" id="perfil-pin" maxlength="4" placeholder="1234"></div>
     <button class="btn btn-primary" style="width:100%" onclick="savePerfil()">Guardar Perfil</button>
@@ -1070,7 +1197,7 @@ let editingPinKey = null;
 let timerInterval = null;
 
 const profiles = [
-  {key:'coord',name:'Coordenador',role:'Acesso total',grupos:null},
+  {key:'coord',name:'Administrador',role:'admin',grupos:null},
 ];
 
 // ═══ UTILS ═══
@@ -1171,30 +1298,7 @@ async function seedJogadores(){
 async function seedAvaliacoes(){}
 
 // ═══ AUTH ═══
-function renderProfileList(){
-  const colors=['#DBEAFE','#D1FAE5','#EDE9FE','#FEE2E2','#FEF3C7','#FCE7F3'];
-  const list=document.getElementById('profile-list');
-  if(!list)return;
-  // Coordenador sempre primeiro
-  let html=`<div class="pin-profile" onclick="selectProfile(0)" id="profile-0">
-    <div class="pin-profile-icon" style="background:#FEE2E2">🎯</div>
-    <div><div class="pin-profile-name">Coordenador</div><div class="pin-profile-role">Acesso total</div></div>
-  </div>`;
-  // Treinadores (exceto coord)
-  profiles.filter(p=>p.key!=='coord').forEach((p,i)=>{
-    const bg=colors[i%colors.length];
-    html+=`<div class="pin-profile" onclick="selectProfile(${i+1})" id="profile-${i+1}">
-      <div class="pin-profile-icon" style="background:${bg}">🏒</div>
-      <div><div class="pin-profile-name">${p.name}</div><div class="pin-profile-role">${p.grupos?p.grupos.join(', '):'Acesso total'}</div></div>
-    </div>`;
-  });
-  // Mesa de Jogo sempre no fim
-  html+=`<div class="pin-profile" onclick="selectProfile('mesa')" id="profile-mesa" style="border-color:#F59E0B;background:#FFFBEB">
-    <div class="pin-profile-icon" style="background:#FEF3C7">📋</div>
-    <div><div class="pin-profile-name">Mesa de Jogo</div><div class="pin-profile-role">Registo do jogo</div></div>
-  </div>`;
-  list.innerHTML=html;
-}
+function renderProfileList(){ renderLoginProfiles(); }
 
 function selectProfile(idx){
   selectedProfile=idx;
@@ -1247,25 +1351,66 @@ function logout(){
   document.getElementById('pin-entry').style.display='none';
   document.querySelectorAll('.pin-profile').forEach(el=>el.classList.remove('selected'));
 }
-function setupForUser(){
-  const isCoord=currentUser.key==='coord';
-  const isMesa=currentUser.key==='mesa';
-  document.querySelectorAll('.coord-only').forEach(el=>el.style.display=isCoord?'':'none');
-  if(!isCoord){
-    document.querySelector('[data-page="admin"]').style.display='none';
-    if(currentUser.key==='t2')document.querySelector('[data-page="avaliacao"]').style.display='none';
+function renderLoginProfiles(){
+  const list=document.getElementById('profile-list');
+  if(!list)return;
+  function roleOrder(p){
+    if(p.key==='coord')return 0;
+    if(p.role==='tesoureiro')return 1;
+    if(p.role==='coord')return 2;
+    if(p.key==='mesa')return 4;
+    return 3;
   }
-  // Mesa de Jogo: esconder tudo exceto Jogo ao Vivo
+  const sorted=[...profiles].sort((a,b)=>roleOrder(a)-roleOrder(b));
+  function profileCard(p,isMesa){
+    if(isMesa){
+      return`<div class="pin-profile" onclick="selectProfile('mesa')" id="profile-mesa" style="border-color:#F59E0B;background:#FFFBEB">
+        <div class="pin-profile-icon" style="background:#FEF3C7">📋</div>
+        <div><div class="pin-profile-name">Mesa de Jogo</div><div class="pin-profile-role">Registo do jogo</div></div>
+      </div>`;
+    }
+    const isAdmin=p.key==='coord';
+    const isTesour=p.role==='tesoureiro';
+    const isCoordTec=p.role==='coord';
+    const icon=isAdmin?'🛡️':isTesour?'💰':isCoordTec?'🎯':'🏒';
+    const bg=isAdmin?'#FEE2E2':isTesour?'#D1FAE5':isCoordTec?'#EDE9FE':'#DBEAFE';
+    const borderStyle=isAdmin?'border-color:#DC2626;background:#FFF5F5':isTesour?'border-color:#10B981;background:#ECFDF5':isCoordTec?'border-color:#7C3AED;background:#F5F3FF':'';
+    const roleLabel=isAdmin?'⚙️ Administração':isTesour?'💰 Tesouraria':isCoordTec?'🎯 Coordenação':'🏒 '+(p.grupos?p.grupos.join('+'):p.role||p.name);
+    const idx=profiles.indexOf(p);
+    const displayName=isAdmin?(DB.config?.clube_nome||p.name):p.name;
+    return`<div class="pin-profile" onclick="selectProfile(${idx})" id="profile-${idx}" style="${borderStyle}">
+      <div class="pin-profile-icon" style="background:${bg}">${icon}</div>
+      <div><div class="pin-profile-name">${displayName}</div><div class="pin-profile-role">${roleLabel}</div></div>
+    </div>`;
+  }
+  list.innerHTML=sorted.map(p=>profileCard(p,false)).join('')+profileCard(null,true);
+}
+
+function setupForUser(){
+  const isAdmin=currentUser.key==='coord';
+  const isMesa=currentUser.key==='mesa';
+  const isTesour=currentUser.role==='tesoureiro';
+  const isCoordTec=currentUser.role==='coord';
+
+  document.querySelectorAll('.admin-only').forEach(el=>el.style.display=isAdmin?'':'none');
+  document.querySelectorAll('.tesour-only').forEach(el=>el.style.display=(isTesour||isAdmin)?'':'none');
+  document.querySelectorAll('.coord-only').forEach(el=>el.style.display=(isCoordTec||isAdmin)?'':'none');
+
+  if(isTesour){
+    document.querySelectorAll('.nav-section:not(.tesour-only)').forEach(el=>el.style.display='none');
+    document.querySelectorAll('.nav-item[data-page]:not(.tesour-only)').forEach(el=>el.style.display='none');
+  }
   if(isMesa){
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>{
       el.style.display=el.dataset.page==='jogo'?'':'none';
     });
     document.querySelectorAll('.nav-section').forEach(el=>el.style.display='none');
   }
-  // Set default group based on profile
-  const defaultGrupo = currentUser.grupos?.[0] || GRUPOS[0] || '';
-  Object.keys(currentGrupo).forEach(k => currentGrupo[k] = defaultGrupo);
+  if(currentUser.key==='t2')document.querySelector('[data-page="avaliacao"]')&&(document.querySelector('[data-page="avaliacao"]').style.display='none');
+  const defaultGrupo=currentUser.key==='t1'?'Sub9+Sub11':'Sub13+Sub15';
+  Object.keys(currentGrupo).forEach(k=>currentGrupo[k]=defaultGrupo);
 }
+
 function doLoginMesa(){
   // PIN para Mesa de Jogo guardado na config
   const mesaPin=DB.config.pins['mesa']||'0000';
@@ -1289,7 +1434,7 @@ document.querySelectorAll('.nav-item[data-page]').forEach(el=>{
   });
 });
 function renderPage(p){
-  const map={dashboard:renderDashboard,presencas:renderPresencas,jogadores:renderJogadores,sessoes:renderSessoes,ficha:renderFichaPage,avaliacao:renderAvaliacao,relatorio:renderRelatorio,convocatoria:renderConvocatoria,jogo:renderJogoAoVivo,admin:renderAdmin,treinos:renderTreinos,metodologia:renderMetodologia,socios:renderSocios,comunicados:()=>{}};
+  const map={dashboard:renderDashboard,presencas:renderPresencas,jogadores:renderJogadores,sessoes:renderSessoes,ficha:renderFichaPage,avaliacao:renderAvaliacao,relatorio:renderRelatorio,convocatoria:renderConvocatoria,jogo:renderJogoAoVivo,admin:renderAdmin,treinos:renderTreinos,metodologia:renderMetodologia,socios:renderSocios,comunicados:()=>{},caixa:renderCaixa};
   if(map[p])map[p]();
 }
 function buildGrupoTabs(cid,pageKey){
@@ -2941,7 +3086,7 @@ async function apagarJogo(id){
 // ═══ ADMIN ═══
 function renderAdmin(){
   document.getElementById('epoca-label').textContent=DB.config.epoca;
-  document.getElementById('pins-tbody').innerHTML=profiles.map(p=>`<tr><td>${p.name}</td><td><span style="font-family:var(--mono)">••••</span></td><td style="display:flex;gap:6px"><button class="btn btn-sm" onclick="openChangePIN('${p.key}','${p.name}')">Alterar PIN</button>${p.key!=='coord'?`<button class="btn btn-sm" style="color:#DC2626;border-color:#FCA5A5" onclick="deletePerfil('${p.key}')">🗑️</button>`:''}</td></tr>`).join('');
+  document.getElementById('pins-tbody').innerHTML=profiles.map(p=>`<tr><td>${p.name}</td><td><span style="font-family:var(--mono)">••••</span></td><td style="display:flex;gap:6px"><button class="btn btn-sm" onclick="openChangePIN('${p.key}','${p.name}')">Alterar PIN</button>${p.key!=='coord'&&p.key!=='mesa'?`<button class="btn btn-sm" style="color:#DC2626;border-color:#FCA5A5" onclick="deletePerfil('${p.key}')">🗑️</button>`:''}</td></tr>`).join('');
   document.getElementById('admin-metrics').innerHTML=`<div class="metric-card"><div class="metric-label">Total jogadores</div><div class="metric-value">${DB.jogadores.length}</div></div><div class="metric-card"><div class="metric-label">Sessões</div><div class="metric-value">${DB.sessoes.length}</div></div>${GRUPOS.map(g=>`<div class="metric-card"><div class="metric-label">${g}</div><div class="metric-value">${jogsDoGrupo(g).length}</div></div>`).join('')}`;
   renderAdminIdentidade();
   renderAdminDelegados();
@@ -3143,7 +3288,7 @@ const MET_CATS = {
 };
 
 function renderMetodologia(){
-  const isCoord=!currentUser?.grupos;
+  const isCoord=!currentUser?.grupos&&currentUser?.role!=='tesoureiro';
   const btnNova=document.getElementById('btn-nova-met');
   if(btnNova) btnNova.style.display=isCoord?'inline-flex':'none';
   const lista=DB.metodologia||[];
@@ -3224,7 +3369,7 @@ function removeMetFicheiro(){
 }
 
 function openModalMetodologia(id){
-  const isCoord=!currentUser?.grupos;
+  const isCoord=!currentUser?.grupos&&currentUser?.role!=='tesoureiro';
   if(!isCoord){toast('Apenas o coordenador pode editar a metodologia.');return;}
   const s=id?(DB.metodologia||[]).find(x=>x.id===id):null;
   metFileB64=null;metFileMime=null;metFileRemoved=false;
@@ -3248,7 +3393,7 @@ function openModalMetodologia(id){
 }
 
 async function saveMetodologia(){
-  const isCoord=!currentUser?.grupos;
+  const isCoord=!currentUser?.grupos&&currentUser?.role!=='tesoureiro';
   if(!isCoord){toast('Sem permissão.');return;}
   const titulo=document.getElementById('met-titulo').value.trim();
   if(!titulo){alert('Introduz um título para a secção');return;}
@@ -3324,7 +3469,7 @@ function renderFichaClinico(jid){
   const estadoCls=estado==='Apto'?'clin-apto':estado==='Lesionado'?'clin-lesionado':'clin-observacao';
   const peso=clinData.peso||'—';const altura=clinData.altura||'—';
   const imc=(clinData.peso&&clinData.altura)?(clinData.peso/(clinData.altura/100)**2).toFixed(1):'—';
-  const isCoord=!currentUser?.grupos;
+  const isCoord=!currentUser?.grupos&&currentUser?.role!=='tesoureiro';
   div.innerHTML=`
     <div class="clin-header-card">
       ${j.foto?`<img class="clin-avatar" src="${j.foto}" alt="${j.nome}">`:`<div class="clin-avatar-ini">${ini}</div>`}
@@ -3903,8 +4048,10 @@ function _socFiltered(){
 }
 
 function renderSocios(){
-  const isCoord=!currentUser?.grupos;
-  document.querySelectorAll('[data-page="socios"]').forEach(el=>el.style.display=isCoord?'flex':'none');
+  const isTesour=currentUser?.role==='tesoureiro';
+  const isCoord=currentUser?.key==='coord'||currentUser?.role==='coord';
+  const canAccess=isTesour||isCoord||currentUser?.key==='coord';
+  document.querySelectorAll('[data-page="socios"]').forEach(el=>el.style.display=(isTesour?'flex':'none'));
   const lista=DB.socios||[];
   const statsEl=document.getElementById('soc-stats');
   if(statsEl){
@@ -3918,8 +4065,8 @@ function renderSocios(){
       <div class="metric-card"><div class="metric-label">Em Falta</div><div class="metric-value ${devem>0?'metric-danger':''}">${devem}</div></div>
       <div class="metric-card"><div class="metric-label">Receita</div><div class="metric-value">\u20ac${receita.toFixed(0)}</div></div>`;
   }
-  if(_socMode==='gestao') _renderSociosGestao(isCoord);
-  else _renderSociosRapido(isCoord);
+  if(_socMode==='gestao') _renderSociosGestao(canAccess);
+  else _renderSociosRapido(canAccess);
 }
 
 function _renderSociosGestao(isCoord){
@@ -3938,11 +4085,12 @@ function _renderSociosGestao(isCoord){
     const editBtns=isCoord?`<div style="display:flex;gap:4px">
       <button class="btn btn-sm" onclick="openModalSocio('${s.id}')" style="color:#2563EB;border-color:#BFDBFE">\u270f\ufe0f</button>
       <button class="btn btn-sm" onclick="deleteSocio('${s.id}')" style="color:#DC2626;border-color:#FCA5A5">\ud83d\uddd1\ufe0f</button>
+      ${s.cartao_impresso?`<button class="btn btn-sm" title="Reimprimir cartão" onclick="reimprimirCartao('${s.id}')" style="color:#7C3AED;border-color:#C4B5FD">🔄</button>`:''}
     </div>`:'';
     return`<div class="soc-card">
       <div class="soc-card-header">
         <div>
-          <div class="soc-card-name">${s.nome}${s.num_socio?` <span style="font-size:10px;color:var(--gray-400);font-weight:400">#${s.num_socio}</span>`:''}</div>
+          <div class="soc-card-name">${s.nome}${s.num_socio?` <span style="font-size:10px;color:var(--gray-400);font-weight:400">#${s.num_socio}</span>`:''} ${s.cartao_impresso?'<span title="Cartão impresso" style="font-size:11px">🪪</span>':''}</div>
           <div style="font-size:11px;color:var(--gray-400)">${s.tipo==='atleta'?'\ud83c\udfd2 Atleta':'\ud83d\udc64 Pai/Adepto'}${atleta?` \u2014 ${atleta.nome}`:''}</div>
         </div>
         ${editBtns}
@@ -3957,6 +4105,7 @@ function _renderSociosGestao(isCoord){
         ${s.ultimo_pag?`<div style="margin-top:4px">Último pag.: <strong>${new Date(s.ultimo_pag).toLocaleDateString('pt-PT')}</strong></div>`:''}
         ${s.contacto?`<div style="margin-top:4px">\ud83d\udcde ${s.contacto}</div>`:''}
         ${s.obs?`<div style="margin-top:4px;color:var(--gray-400)">${s.obs}</div>`:''}
+        ${atleta&&atleta.contacto?`<div style="margin-top:4px;color:var(--blue)">\ud83d\udcf1 Atleta: ${atleta.contacto}</div>`:''}
       </div>
     </div>`;
   }).join('');
@@ -4103,7 +4252,7 @@ function _nextNumSocio(){
 }
 
 function openModalSocio(id){
-  const isCoord=!currentUser?.grupos;
+  const isCoord=!currentUser?.grupos&&currentUser?.role!=='tesoureiro';
   if(!isCoord){toast('Apenas o coordenador pode gerir sócios.');return;}
   const s=id?(DB.socios||[]).find(x=>x.id===id):null;
   document.getElementById('soc-edit-id').value=id||'';
@@ -4138,7 +4287,7 @@ function openModalSocio(id){
 }
 
 async function saveSocio(){
-  const isCoord=!currentUser?.grupos;
+  const isCoord=!currentUser?.grupos&&currentUser?.role!=='tesoureiro';
   if(!isCoord){toast('Sem permissão.');return;}
   const tipo=document.getElementById('soc-tipo').value;
   const atleta_id=tipo==='atleta'?(document.getElementById('soc-atleta-id').value||null):null;
@@ -4173,6 +4322,16 @@ async function saveSocio(){
   closeModal('modal-socio');
   toast('✅ Sócio guardado!');
   renderSocios();
+}
+
+async function reimprimirCartao(id){
+  const socio=(DB.socios||[]).find(s=>s.id===id);
+  if(!socio)return;
+  if(!confirm(`Reimprimir cartão de ${socio.nome}?`))return;
+  await sb.from('socios').update({cartao_impresso:false}).eq('id',id);
+  socio.cartao_impresso=false;
+  renderSocios();
+  toast(`🔄 ${socio.nome} marcado para reimprimir. Clica em Cartões para gerar.`);
 }
 
 async function deleteSocio(id){
@@ -4411,15 +4570,30 @@ async function deleteDelegado(id){
 
 function renderAdminPerfis(){
   const el=document.getElementById('admin-perfis-list');if(!el)return;
-  el.innerHTML=profiles.filter(p=>p.key!=='coord').map(p=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:13px">
+  const treinadores=profiles.filter(p=>p.key!=='coord'&&p.role!=='tesoureiro'&&p.role!=='coord');
+  const coordTecs=profiles.filter(p=>p.role==='coord');
+  el.innerHTML=treinadores.length?treinadores.map(p=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:13px">
     <div style="flex:1">
       <strong>${p.name}</strong>
       ${p.licenca?`<span style="color:var(--gray-400);font-size:11px;margin-left:6px">Lic. ${p.licenca}</span>`:''}
       <div style="font-size:11px;color:var(--gray-500);margin-top:2px">${p.grupos?p.grupos.join(', '):'Acesso total'}${p.cont?' · '+p.cont:''}</div>
     </div>
     <button class="btn btn-sm" onclick="openModalPerfil('${p.key}')">✏️ Editar</button>
-    ${p.key!=='coord'?`<button class="btn btn-sm" style="color:#DC2626;border-color:#FCA5A5" onclick="deletePerfil('${p.key}')">🗑️</button>`:'<span style="font-size:10px;color:var(--gray-400)">Sistema</span>'}
-  </div>`).join('');
+    <button class="btn btn-sm" style="color:#DC2626;border-color:#FCA5A5" onclick="deletePerfil('${p.key}')">🗑️</button>
+  </div>`).join(''):'<div style="font-size:12px;color:var(--gray-400);padding:8px 0">Sem treinadores criados.</div>';
+  // Lista tesoureiros
+  const elT=document.getElementById('admin-tesour-list');if(!elT)return;
+  const elC=document.getElementById('admin-coordtec-list');
+  if(elC){elC.innerHTML=coordTecs.length?coordTecs.map(p=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:13px"><div style="flex:1"><strong>${p.name}</strong></div><button class="btn btn-sm" onclick="openModalPerfil('${p.key}')">✏️ Editar</button><button class="btn btn-sm" style="color:#DC2626;border-color:#FCA5A5" onclick="deletePerfil('${p.key}')">🗑️</button></div>`).join(''):'<div style="font-size:12px;color:var(--gray-400);padding:8px 0">Sem coordenador técnico criado.</div>';}
+  const tesoureiros=profiles.filter(p=>p.role==='tesoureiro');
+  elT.innerHTML=tesoureiros.length?tesoureiros.map(p=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:13px">
+    <div style="flex:1">
+      <strong>${p.name}</strong>
+      ${p.cont?`<div style="font-size:11px;color:var(--gray-500);margin-top:2px">${p.cont}</div>`:''}
+    </div>
+    <button class="btn btn-sm" onclick="openModalPerfil('${p.key}')">✏️ Editar</button>
+    <button class="btn btn-sm" style="color:#DC2626;border-color:#FCA5A5" onclick="deletePerfil('${p.key}')">🗑️</button>
+  </div>`).join(''):'<div style="font-size:12px;color:var(--gray-400);padding:8px 0">Sem tesoureiro criado.</div>';
 }
 function renderAdminGrupos(){
   const el=document.getElementById('admin-grupos-list');if(!el)return;
@@ -4429,9 +4603,11 @@ function renderAdminGrupos(){
   </div>`).join('');
 }
 function openModalPerfil(key){
-  const p=key?profiles.find(x=>x.key===key):null;
-  document.getElementById('perfil-edit-key').value=key||'';
-  document.getElementById('modal-perfil-title').textContent=p?'Editar Perfil':'Novo Perfil';
+  const presetTesour=key==='__tesoureiro__';
+  const presetCoord=key==='__coord__';
+  const p=key&&!presetTesour?profiles.find(x=>x.key===key):null;
+  document.getElementById('perfil-edit-key').value=p?p.key:'';
+  document.getElementById('modal-perfil-title').textContent=p?'Editar Perfil':(presetTesour?'Novo Tesoureiro':presetCoord?'Novo Coordenador Técnico':'Novo Perfil');
   document.getElementById('perfil-nome').value=p?p.name:'';
   document.getElementById('perfil-licenca').value=p?p.licenca||'':'';
   document.getElementById('perfil-cont').value=p?p.cont||'':'';
@@ -4442,7 +4618,9 @@ function openModalPerfil(key){
     <input type="checkbox" value="${g}" ${p&&(p.grupos||[]).includes(g)?'checked':''}>
     <span>${g}</span>
   </label>`).join('');
-  document.getElementById('perfil-acesso-total').checked=p&&!p.grupos;
+  document.getElementById('perfil-acesso-total').checked=false;
+  document.getElementById('perfil-coord').checked=(p&&p.role==='coord')||presetCoord;
+  document.getElementById('perfil-tesoureiro').checked=(p&&p.role==='tesoureiro')||presetTesour;
   openModal('modal-perfil');
 }
 async function savePerfil(){
@@ -4453,14 +4631,17 @@ async function savePerfil(){
   const licenca=document.getElementById('perfil-licenca').value.trim();
   const cont=document.getElementById('perfil-cont').value.trim();
   const acessoTotal=document.getElementById('perfil-acesso-total').checked;
-  const grupos=acessoTotal?null:[...document.querySelectorAll('#perfil-grupos-checks input:checked')].map(x=>x.value);
+  const isTesour=document.getElementById('perfil-tesoureiro').checked;
+  const grupos=acessoTotal||isTesour?null:[...document.querySelectorAll('#perfil-grupos-checks input:checked')].map(x=>x.value);
+  const isCoordTec=document.getElementById('perfil-coord')?.checked||false;
+  const roleVal=isTesour?'tesoureiro':isCoordTec?'coord':(acessoTotal?'Acesso total':grupos?grupos.join('+'):nome);
   if(editKey){
     const p=profiles.find(x=>x.key===editKey);
-    if(p){p.name=nome;p.grupos=grupos;p.licenca=licenca;p.cont=cont;if(pin&&pin.length===4)DB.config.pins[editKey]=pin;}
+    if(p){p.name=nome;p.grupos=grupos;p.role=roleVal;p.licenca=licenca;p.cont=cont;if(pin&&pin.length===4)DB.config.pins[editKey]=pin;}
   } else {
     if(!pin||pin.length!==4||!/^\d{4}$/.test(pin)){alert('PIN deve ter 4 dígitos');return;}
     const key='t'+(Date.now()%10000);
-    profiles.push({key,name:nome,role:grupos?grupos.join('+'):'Acesso total',grupos,licenca,cont});
+    profiles.push({key,name:nome,role:roleVal,grupos,licenca,cont});
     DB.config.pins[key]=pin;
   }
   await sb.from('config').upsert({key:'pins',value:JSON.stringify(DB.config.pins)});
@@ -4948,10 +5129,503 @@ Dados:
   btn.disabled=false;btn.textContent='✨ Gerar com IA';
 }
 
-// ═══ INIT ═══
+// ═══ FLUXO DE CAIXA ═══
+let DB_CAIXA={movimentos:[],categorias:{receita:['Quotas','Patrocinadores','Rifas','Subsídios','Outros'],despesa:['Árbitros','Deslocações','Equipamentos','Seguros','Instalações','Alojamento','Outros']}};
+const EPOCAS_DEFAULT=['2024/2025','2025/2026','2026/2027'];
+
+async function loadCaixa(){
+  const [movR,catR]=await Promise.all([
+    sb.from('caixa').select('*').order('data',{ascending:false}),
+    sb.from('caixa_config').select('*')
+  ]);
+  DB_CAIXA.movimentos=movR?.data||[];
+  if(catR?.data?.length){
+    const cfg=catR.data.find(x=>x.key==='categorias');
+    if(cfg)try{DB_CAIXA.categorias=JSON.parse(cfg.value);}catch(e){}
+  }
+}
+
+function _epocas(){
+  const eps=new Set([...EPOCAS_DEFAULT,...(DB_CAIXA.movimentos||[]).map(m=>m.epoca||'').filter(Boolean)]);
+  return[...eps].sort().reverse();
+}
+function _currentEpoca(){return DB.config?.epoca||'2025/2026';}
+
+function renderCaixa(){
+  const movs=DB_CAIXA.movimentos||[];
+  const filConta=(document.getElementById('caixa-fil-conta')?.value)||'';
+  const filTipo=(document.getElementById('caixa-fil-tipo')?.value)||'';
+  const search=((document.getElementById('caixa-search')?.value)||'').toLowerCase();
+  // Popular select de épocas
+  const selEpoca=document.getElementById('caixa-fil-epoca');
+  if(selEpoca){
+    const curVal=selEpoca.value||_currentEpoca();
+    selEpoca.innerHTML=`<option value="">Todas as épocas</option>`+_epocas().map(e=>`<option value="${e}" ${e===curVal?'selected':''}>${e}</option>`).join('');
+  }
+  const filEpoca=(document.getElementById('caixa-fil-epoca')?.value)||'';
+  const filtered=movs.filter(m=>
+    (!filConta||m.conta===filConta)&&
+    (!filTipo||m.tipo===filTipo)&&
+    (!filEpoca||m.epoca===filEpoca)&&
+    (!search||(m.descricao||'').toLowerCase().includes(search)||(m.categoria||'').toLowerCase().includes(search))
+  );
+  // Resumo
+  const resumo=document.getElementById('caixa-resumo');
+  if(resumo){
+    const rec=filtered.filter(m=>m.tipo==='receita').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+    const desp=filtered.filter(m=>m.tipo==='despesa').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+    const saldo=rec-desp;
+    const recOf=filtered.filter(m=>m.tipo==='receita'&&m.conta==='oficial').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+    const despOf=filtered.filter(m=>m.tipo==='despesa'&&m.conta==='oficial').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+    const recDia=filtered.filter(m=>m.tipo==='receita'&&m.conta==='diario').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+    const despDia=filtered.filter(m=>m.tipo==='despesa'&&m.conta==='diario').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+    resumo.innerHTML=`
+      <div class="metric-card"><div class="metric-label">📈 Total Receitas</div><div class="metric-value metric-ok">€${rec.toFixed(2)}</div></div>
+      <div class="metric-card"><div class="metric-label">📉 Total Despesas</div><div class="metric-value ${desp>0?'metric-danger':''}">€${desp.toFixed(2)}</div></div>
+      <div class="metric-card"><div class="metric-label">💰 Saldo</div><div class="metric-value ${saldo>=0?'metric-ok':'metric-danger'}">€${saldo.toFixed(2)}</div></div>
+      <div class="metric-card"><div class="metric-label">🏦 Conta Oficial</div><div class="metric-value ${(recOf-despOf)>=0?'metric-ok':'metric-danger'}">€${(recOf-despOf).toFixed(2)}</div></div>
+      <div class="metric-card"><div class="metric-label">💼 Dia-a-Dia</div><div class="metric-value ${(recDia-despDia)>=0?'metric-ok':'metric-danger'}">€${(recDia-despDia).toFixed(2)}</div></div>`;
+  }
+  // Lista
+  const lista=document.getElementById('caixa-lista');
+  if(!lista)return;
+  if(!filtered.length){
+    lista.innerHTML=`<div style="text-align:center;padding:40px;color:var(--gray-400)"><div style="font-size:36px;margin-bottom:8px">💸</div><div>Sem movimentos. Clica em "+ Movimento" para adicionar.</div></div>`;
+    return;
+  }
+  lista.innerHTML=`<table class="tbl"><thead><tr>
+    <th>Data</th><th>Tipo</th><th>Conta</th><th>Categoria</th><th>Descrição</th><th>Época</th><th style="text-align:right">Valor</th><th></th>
+  </tr></thead><tbody>`+filtered.map(m=>`<tr>
+    <td>${m.data?new Date(m.data+'T00:00:00').toLocaleDateString('pt-PT'):'-'}</td>
+    <td><span class="badge ${m.tipo==='receita'?'badge-ok':'badge-danger'}">${m.tipo==='receita'?'📈 Receita':'📉 Despesa'}</span></td>
+    <td><span style="font-size:11px;color:var(--gray-500)">${m.conta==='oficial'?'🏦 Oficial':'💼 Dia-a-Dia'}</span></td>
+    <td>${m.categoria||'-'}</td>
+    <td>${m.descricao||'-'}</td>
+    <td style="font-size:11px;color:var(--gray-400)">${m.epoca||'-'}</td>
+    <td style="text-align:right;font-weight:600;color:${m.tipo==='receita'?'var(--green)':'#DC2626'}">€${parseFloat(m.valor||0).toFixed(2)}</td>
+    <td><div style="display:flex;gap:4px">
+      <button class="btn btn-sm" onclick="openModalMovimento('${m.id}')" style="color:#2563EB;border-color:#BFDBFE">✏️</button>
+      <button class="btn btn-sm" onclick="deleteMovimento('${m.id}')" style="color:#DC2626;border-color:#FCA5A5">🗑️</button>
+    </div></td>
+  </tr>`).join('')+'</tbody></table>';
+}
+
+function openModalMovimento(id){
+  const m=id?(DB_CAIXA.movimentos||[]).find(x=>x.id===id):null;
+  document.getElementById('mov-edit-id').value=id||'';
+  document.getElementById('mov-modal-title').textContent=m?'Editar Movimento':'Novo Movimento';
+  document.getElementById('mov-tipo').value=m?.tipo||'receita';
+  document.getElementById('mov-conta').value=m?.conta||'oficial';
+  document.getElementById('mov-data').value=m?.data||new Date().toISOString().split('T')[0];
+  document.getElementById('mov-valor').value=m?.valor||'';
+  document.getElementById('mov-descricao').value=m?.descricao||'';
+  // Épocas
+  const selEp=document.getElementById('mov-epoca');
+  const eps=_epocas();
+  selEp.innerHTML=eps.map(e=>`<option value="${e}" ${(m?.epoca||_currentEpoca())===e?'selected':''}>${e}</option>`).join('');
+  updateMovCategorias(m?.categoria);
+  openModal('modal-movimento');
+}
+function updateMovCategorias(selected){
+  const tipo=document.getElementById('mov-tipo')?.value||'receita';
+  const cats=(DB_CAIXA.categorias||{})[tipo]||[];
+  const sel=document.getElementById('mov-categoria');
+  sel.innerHTML=cats.map(c=>`<option value="${c}" ${c===selected?'selected':''}>${c}</option>`).join('');
+}
+async function saveMovimento(){
+  const id=document.getElementById('mov-edit-id').value;
+  const rec={
+    tipo:document.getElementById('mov-tipo').value,
+    conta:document.getElementById('mov-conta').value,
+    data:document.getElementById('mov-data').value,
+    valor:parseFloat(document.getElementById('mov-valor').value)||0,
+    categoria:document.getElementById('mov-categoria').value,
+    descricao:document.getElementById('mov-descricao').value.trim(),
+    epoca:document.getElementById('mov-epoca').value
+  };
+  if(!rec.valor){toast('Introduz um valor');return;}
+  if(id){
+    await sb.from('caixa').update(rec).eq('id',id);
+    const idx=(DB_CAIXA.movimentos||[]).findIndex(x=>x.id===id);
+    if(idx>=0)DB_CAIXA.movimentos[idx]={...DB_CAIXA.movimentos[idx],...rec};
+  } else {
+    rec.id=uid();
+    const {error}=await sb.from('caixa').insert(rec);
+    if(!error){DB_CAIXA.movimentos=DB_CAIXA.movimentos||[];DB_CAIXA.movimentos.unshift(rec);}
+  }
+  closeModal('modal-movimento');toast('✅ Movimento guardado!');renderCaixa();
+}
+async function deleteMovimento(id){
+  if(!confirm('Apagar este movimento?'))return;
+  await sb.from('caixa').delete().eq('id',id);
+  DB_CAIXA.movimentos=(DB_CAIXA.movimentos||[]).filter(x=>x.id!==id);
+  toast('🗑️ Movimento apagado');renderCaixa();
+}
+function openModalCaixaCategoria(){renderCatListas();openModal('modal-caixa-cat');}
+function renderCatListas(){
+  ['receita','despesa'].forEach(tipo=>{
+    const el=document.getElementById(`cat-${tipo}s-list`);if(!el)return;
+    const cats=(DB_CAIXA.categorias||{})[tipo]||[];
+    el.innerHTML=cats.map((c,i)=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:13px">
+      <span style="flex:1">${c}</span>
+      ${cats.length>1?`<button class="btn btn-sm" style="color:#DC2626;border-color:#FCA5A5;padding:2px 6px" onclick="removeCategoria('${tipo}',${i})">×</button>`:''}
+    </div>`).join('');
+  });
+}
+async function addCategoria(tipo){
+  const inp=document.getElementById(`cat-nova-${tipo}`);
+  const nome=(inp?.value||'').trim();
+  if(!nome)return;
+  DB_CAIXA.categorias=DB_CAIXA.categorias||{receita:[],despesa:[]};
+  if(!(DB_CAIXA.categorias[tipo]||[]).includes(nome)){
+    DB_CAIXA.categorias[tipo]=(DB_CAIXA.categorias[tipo]||[]);
+    DB_CAIXA.categorias[tipo].push(nome);
+    await sb.from('caixa_config').upsert({key:'categorias',value:JSON.stringify(DB_CAIXA.categorias)});
+    inp.value='';renderCatListas();toast('✅ Categoria adicionada!');
+  }
+}
+async function removeCategoria(tipo,idx){
+  if(!confirm('Remover esta categoria?'))return;
+  DB_CAIXA.categorias[tipo].splice(idx,1);
+  await sb.from('caixa_config').upsert({key:'categorias',value:JSON.stringify(DB_CAIXA.categorias)});
+  renderCatListas();toast('🗑️ Categoria removida');
+}
+async function fecharEpoca(){
+  const nova=(document.getElementById('nova-epoca-nome')?.value||'').trim();
+  if(!nova){alert('Introduz o nome da nova época');return;}
+  if(!confirm(`Fechar época actual e iniciar "${nova}"? O saldo transitará automaticamente.`))return;
+  // Calcular saldo actual da época corrente
+  const epocaAtual=_currentEpoca();
+  const movsEp=(DB_CAIXA.movimentos||[]).filter(m=>m.epoca===epocaAtual);
+  const saldoOficial=movsEp.filter(m=>m.conta==='oficial').reduce((a,m)=>a+(m.tipo==='receita'?1:-1)*(parseFloat(m.valor)||0),0);
+  const saldoDiario=movsEp.filter(m=>m.conta==='diario').reduce((a,m)=>a+(m.tipo==='receita'?1:-1)*(parseFloat(m.valor)||0),0);
+  // Inserir movimentos de transição
+  const transacoes=[];
+  if(Math.abs(saldoOficial)>0.01){
+    const t={id:uid(),tipo:saldoOficial>0?'receita':'despesa',conta:'oficial',data:new Date().toISOString().split('T')[0],valor:Math.abs(saldoOficial),categoria:'Saldo Transitado',descricao:`Saldo transitado da época ${epocaAtual}`,epoca:nova};
+    transacoes.push(t);
+  }
+  if(Math.abs(saldoDiario)>0.01){
+    const t={id:uid(),tipo:saldoDiario>0?'receita':'despesa',conta:'diario',data:new Date().toISOString().split('T')[0],valor:Math.abs(saldoDiario),categoria:'Saldo Transitado',descricao:`Saldo transitado da época ${epocaAtual}`,epoca:nova};
+    transacoes.push(t);
+  }
+  if(transacoes.length){await sb.from('caixa').insert(transacoes);DB_CAIXA.movimentos=[...transacoes,...(DB_CAIXA.movimentos||[])];}
+  // Actualizar época corrente
+  DB.config.epoca=nova;
+  await sb.from('config').upsert({key:'epoca',value:nova});
+  document.getElementById('nova-epoca-nome').value='';
+  closeModal('modal-caixa-cat');toast(`✅ Época fechada! Saldo transitado para ${nova}`);renderCaixa();
+}
+function gerarPDFCaixa(){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const corClube=getCorClube?getCorClube():'#8B1A1A';
+  const clubeNome=(DB.config?.clube_nome||document.querySelector('.clube-nome')?.textContent||'GestiOK').trim();
+  const epoca=_currentEpoca();
+  const W=210,mL=15,mR=15,cW=W-mL-mR;
+  let y=0;
+  // Cabeçalho
+  doc.setFillColor(corClube);doc.rect(0,0,W,28,'F');
+  try{if(window.LOGO_B64){const c=document.createElement('canvas');c.width=80;c.height=80;const ctx=c.getContext('2d');const img=new Image();img.src=window.LOGO_B64;img.onload=()=>{};ctx.drawImage(img,0,0,80,80);doc.addImage(c.toDataURL(),'JPEG',mL,2,24,24);}}catch(e){}
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(14);
+  doc.text(`${clubeNome} — Relatório de Caixa`,mL+28,12);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);
+  doc.text(`Época: ${epoca} | Data: ${new Date().toLocaleDateString('pt-PT')}`,mL+28,20);
+  y=36;
+  // Resumo
+  const movs=DB_CAIXA.movimentos||[];
+  const movsEp=movs.filter(m=>!m.epoca||m.epoca===epoca);
+  const rec=movsEp.filter(m=>m.tipo==='receita').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+  const desp=movsEp.filter(m=>m.tipo==='despesa').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+  doc.setTextColor(30,30,30);doc.setFont('helvetica','bold');doc.setFontSize(11);
+  doc.text('Resumo',mL,y);y+=7;
+  doc.setFont('helvetica','normal');doc.setFontSize(10);
+  doc.text(`Total Receitas: €${rec.toFixed(2)}`,mL,y);y+=6;
+  doc.text(`Total Despesas: €${desp.toFixed(2)}`,mL,y);y+=6;
+  doc.setFont('helvetica','bold');
+  doc.text(`Saldo: €${(rec-desp).toFixed(2)}`,mL,y);y+=10;
+  // Movimentos
+  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text('Movimentos',mL,y);y+=7;
+  doc.setFontSize(8);doc.setFont('helvetica','bold');
+  doc.setFillColor(240,240,240);doc.rect(mL,y-4,cW,6,'F');
+  doc.text('Data',mL+1,y);doc.text('Tipo',mL+25,y);doc.text('Conta',mL+50,y);doc.text('Categoria',mL+75,y);doc.text('Descrição',mL+110,y);doc.text('Valor €',mL+cW-15,y,{align:'right'});
+  y+=4;doc.setFont('helvetica','normal');
+  movsEp.slice(0,80).forEach(m=>{
+    if(y>270){doc.addPage();y=20;}
+    const isRec=m.tipo==='receita';
+    doc.setTextColor(isRec?5:180,isRec?100:0,isRec?0:0);
+    doc.text(m.data?new Date(m.data+'T00:00:00').toLocaleDateString('pt-PT'):'-',mL+1,y);
+    doc.setTextColor(30,30,30);
+    doc.text(isRec?'Receita':'Despesa',mL+25,y);
+    doc.text(m.conta==='oficial'?'Oficial':'Dia-a-Dia',mL+50,y);
+    doc.text((m.categoria||'-').substring(0,16),mL+75,y);
+    doc.text((m.descricao||'-').substring(0,24),mL+110,y);
+    doc.setTextColor(isRec?5:180,isRec?100:0,isRec?0:0);
+    doc.text(`€${parseFloat(m.valor||0).toFixed(2)}`,mL+cW-15,y,{align:'right'});
+    doc.setTextColor(30,30,30);
+    y+=5;
+  });
+  y+=5;doc.setFont('helvetica','italic');doc.setFontSize(8);doc.setTextColor(150,150,150);
+  doc.text(`GestiOK · ${clubeNome} · Exportado em ${new Date().toLocaleDateString('pt-PT')}`,W/2,285,{align:'center'});
+  doc.save(`caixa-${epoca.replace('/','_')}.pdf`);
+}
+
+// ═══ CARTÕES DE SÓCIO CR80 ═══
+async function gerarCartoesSocios(){
+  const lista=(DB.socios||[]).filter(s=>s.estado==='Activo'&&s.quota==='Paga'&&!s.cartao_impresso);
+  if(!lista.length){toast('✅ Todos os sócios já têm cartão impresso! Usa 🔄 para reimprimir.');return;}
+  toast('A gerar cartões… aguarda ⏳');
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const clubeNome=(DB.config?.clube_nome||document.querySelector('.topbar-title')?.textContent||document.title.split('—')[0]||'GestiOK').trim();
+  const epoca=DB.config?.epoca||'2025/2026';
+  const corClube=(typeof getCorClube==='function')?getCorClube():(DB.config?.clube_cor||getComputedStyle(document.documentElement).getPropertyValue('--red').trim()||'#8B1A1A');
+  // CR80: 85.6 × 54mm — 4 por página (2 colunas × 2 linhas)
+  const cW=85.6,cH=54;
+  const marginX=(210-cW*2)/3;
+  const marginY=(297-cH*2)/3;
+  const cols=[marginX, marginX*2+cW];
+  const rows=[marginY, marginY*2+cH];
+  // Parse cor hex para rgb
+  function hexRgb(hex){const h=hex.replace('#','');const r=parseInt(h.substring(0,2),16);const g=parseInt(h.substring(2,4),16);const b=parseInt(h.substring(4,6),16);return[r,g,b];}
+  const [cr,cg,cb]=hexRgb(corClube.startsWith('#')?corClube:'#8B1A1A');
+  // Logo
+  const logoSrc=typeof LOGO_B64!=='undefined'?LOGO_B64:(window.LOGO_B64||null);
+  // Gerar QR code como canvas usando API pública (data URI)
+  async function qrDataUrl(text){
+    return new Promise(resolve=>{
+      const canvas=document.createElement('canvas');
+      canvas.width=120;canvas.height=120;
+      const ctx=canvas.getContext('2d');
+      // QR simples via qrserver.com (sem dependência extra)
+      const img=new Image();
+      img.crossOrigin='anonymous';
+      img.onload=()=>{ctx.drawImage(img,0,0,120,120);resolve(canvas.toDataURL('image/png'));};
+      img.onerror=()=>resolve(null);
+      img.src=`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(text)}&bgcolor=ffffff&color=000000&margin=2`;
+    });
+  }
+  function desenharCartao(x,y,socio,qrImg){
+    // Fundo branco
+    doc.setFillColor(255,255,255);
+    doc.roundedRect(x,y,cW,cH,3,3,'F');
+    // Borda subtil
+    doc.setDrawColor(220,220,220);doc.setLineWidth(0.3);
+    doc.roundedRect(x,y,cW,cH,3,3,'S');
+    // Cabeçalho colorido
+    doc.setFillColor(cr,cg,cb);
+    doc.roundedRect(x,y,cW,14,3,3,'F');
+    doc.setFillColor(cr,cg,cb);
+    doc.rect(x,y+8,cW,6,'F'); // retângulo extra para quadricular cantos inferiores do header
+    // Logo no cabeçalho
+    if(logoSrc){
+      try{doc.addImage(logoSrc,'JPEG',x+2,y+1,12,12);}catch(e){}
+    }
+    // Nome do clube no header
+    doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(7.5);
+    doc.text(clubeNome,x+16,y+6);
+    doc.setFont('helvetica','normal');doc.setFontSize(6);
+    doc.text('CARTAO DE SOCIO',x+16,y+11);
+    // Época no canto direito do header
+    doc.setFontSize(5.5);
+    doc.text(epoca,x+cW-2,y+6,{align:'right'});
+    // Área principal
+    doc.setTextColor(30,30,30);
+    // Nome do sócio
+    doc.setFont('helvetica','bold');doc.setFontSize(9.5);
+    const nomeTrunc=socio.nome.length>24?socio.nome.substring(0,24)+'...':socio.nome;
+    doc.text(nomeTrunc,x+3,y+22);
+    // Tipo
+    doc.setFont('helvetica','normal');doc.setFontSize(6.5);
+    doc.setTextColor(100,100,100);
+    doc.text(socio.tipo==='atleta'?'🏒 Atleta':'👤 Sócio',x+3,y+28);
+    // Nº sócio
+    if(socio.num_socio){
+      doc.setFont('helvetica','bold');doc.setFontSize(7);
+      doc.setTextColor(cr,cg,cb);
+      doc.text('N. '+socio.num_socio,x+3,y+34);
+    }
+    // Estado badge
+    doc.setFillColor(209,250,229);doc.roundedRect(x+3,y+37,18,5,1,1,'F');
+    doc.setTextColor(6,95,70);doc.setFont('helvetica','bold');doc.setFontSize(5.5);
+    doc.text('ACTIVO',x+4,y+40.5);
+    // QR code
+    if(qrImg){
+      try{doc.addImage(qrImg,'PNG',x+cW-22,y+17,20,20);}catch(e){}
+    }
+    // Linha decorativa inferior com cor do clube
+    doc.setFillColor(cr,cg,cb);doc.rect(x,y+cH-2,cW,2,'F');
+    doc.setFillColor(255,255,255);doc.roundedRect(x,y+cH-3,cW,3,1,1,'F');
+    doc.setFillColor(cr,cg,cb);doc.rect(x,y+cH-2,cW,2,'F');
+  }
+  // Gerar cartões
+  let idx=0;
+  let page=0;
+  for(let i=0;i<lista.length;i++){
+    const socio=lista[i];
+    const pos=idx%4;
+    if(pos===0&&idx>0){doc.addPage();page++;}
+    const col=pos%2;
+    const row=Math.floor(pos/2);
+    const x=cols[col];
+    const y=rows[row];
+    // QR com dados do sócio
+    const qrText=`GESTIOK|${clubeNome}|${socio.nome}|${socio.num_socio||''}|${epoca}`;
+    const qrImg=await qrDataUrl(qrText);
+    desenharCartao(x,y,socio,qrImg);
+    idx++;
+  }
+  // Linhas de corte em todas as páginas
+  const totalPages=doc.getNumberOfPages();
+  for(let p=1;p<=totalPages;p++){
+    doc.setPage(p);
+    doc.setDrawColor(180,180,180);doc.setLineWidth(0.2);doc.setLineDashPattern([1,1],0);
+    // Linha vertical central
+    doc.line(105,10,105,287);
+    // Linha horizontal central
+    doc.line(10,148.5,200,148.5);
+    doc.setLineDashPattern([],0);
+
+  }
+  doc.save(`cartoes-socios-${clubeNome.replace(/\s/g,'_')}.pdf`);
+  const ids=lista.map(s=>s.id);
+  await sb.from('socios').update({cartao_impresso:true}).in('id',ids);
+  ids.forEach(id=>{const s=(DB.socios||[]).find(x=>x.id===id);if(s)s.cartao_impresso=true;});
+  renderSocios();
+  toast(`✅ ${lista.length} cartões gerados e marcados como impressos!`);
+}
+
+// ═══ INIT ═══// ═══ INIT ═══// ═══ CARTÕES DE SÓCIO CR80 ═══
+async function gerarCartoesSocios(){
+  const lista=(DB.socios||[]).filter(s=>s.estado==='Activo'&&s.quota==='Paga'&&!s.cartao_impresso);
+  if(!lista.length){toast('✅ Todos os sócios já têm cartão impresso! Usa 🔄 para reimprimir.');return;}
+  toast('A gerar cartões… aguarda ⏳');
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const clubeNome=(DB.config?.clube_nome||document.querySelector('.clube-nome')?.textContent||'GestiOK').trim();
+  const epoca=DB.config?.epoca||'2025/2026';
+  const corClube=(typeof getCorClube==='function')?getCorClube():(DB.config?.clube_cor||getComputedStyle(document.documentElement).getPropertyValue('--red').trim()||'#8B1A1A');
+  // CR80: 85.6 × 54mm — 4 por página (2 colunas × 2 linhas)
+  const cW=85.6,cH=54;
+  const marginX=(210-cW*2)/3; // margem lateral entre e fora dos cartões
+  const marginY=(297-cH*2)/3;
+  const cols=[marginX, marginX*2+cW];
+  const rows=[marginY, marginY*2+cH];
+  // Parse cor hex para rgb
+  function hexRgb(hex){const r=parseInt(hex.slice(1,3),16);const g=parseInt(hex.slice(3,5),16);const b=parseInt(hex.slice(5,7),16);return[r,g,b];}
+  const [cr,cg,cb]=hexRgb(corClube);
+  // Logo em base64
+  let logoB64=null;
+  try{if(window.LOGO_B64){logoB64=window.LOGO_B64;}}catch(e){}
+  // Gerar QR code como canvas usando API pública (data URI)
+  async function qrDataUrl(text){
+    return new Promise(resolve=>{
+      const canvas=document.createElement('canvas');
+      canvas.width=120;canvas.height=120;
+      const ctx=canvas.getContext('2d');
+      // QR simples via qrserver.com (sem dependência extra)
+      const img=new Image();
+      img.crossOrigin='anonymous';
+      img.onload=()=>{ctx.drawImage(img,0,0,120,120);resolve(canvas.toDataURL('image/png'));};
+      img.onerror=()=>resolve(null);
+      img.src=`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(text)}&bgcolor=ffffff&color=000000&margin=2`;
+    });
+  }
+  function desenharCartao(x,y,socio,qrImg){
+    // Fundo branco
+    doc.setFillColor(255,255,255);
+    doc.roundedRect(x,y,cW,cH,3,3,'F');
+    // Borda subtil
+    doc.setDrawColor(220,220,220);doc.setLineWidth(0.3);
+    doc.roundedRect(x,y,cW,cH,3,3,'S');
+    // Cabeçalho colorido
+    doc.setFillColor(cr,cg,cb);
+    doc.roundedRect(x,y,cW,14,3,3,'F');
+    doc.setFillColor(cr,cg,cb);
+    doc.rect(x,y+8,cW,6,'F'); // retângulo extra para quadricular cantos inferiores do header
+    // Logo no cabeçalho
+    if(logoB64){
+      try{doc.addImage(logoB64,'JPEG',x+2,y+1,12,12);}catch(e){}
+    }
+    // Nome do clube no header
+    doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(7.5);
+    doc.text(clubeNome,x+16,y+6);
+    doc.setFont('helvetica','normal');doc.setFontSize(6);
+    doc.text('CARTÃO DE SÓCIO',x+16,y+11);
+    // Época no canto direito do header
+    doc.setFontSize(5.5);
+    doc.text(epoca,x+cW-2,y+6,{align:'right'});
+    // Área principal
+    doc.setTextColor(30,30,30);
+    // Nome do sócio
+    doc.setFont('helvetica','bold');doc.setFontSize(9.5);
+    const nomeTrunc=socio.nome.length>22?socio.nome.substring(0,22)+'…':socio.nome;
+    doc.text(nomeTrunc,x+3,y+22);
+    // Tipo
+    doc.setFont('helvetica','normal');doc.setFontSize(6.5);
+    doc.setTextColor(100,100,100);
+    doc.text(socio.tipo==='atleta'?'🏒 Atleta':'👤 Sócio',x+3,y+28);
+    // Nº sócio
+    if(socio.num_socio){
+      doc.setFont('helvetica','bold');doc.setFontSize(7);
+      doc.setTextColor(cr,cg,cb);
+      doc.text(`Nº ${socio.num_socio}`,x+3,y+34);
+    }
+    // Estado badge
+    doc.setFillColor(209,250,229);doc.roundedRect(x+3,y+37,18,5,1,1,'F');
+    doc.setTextColor(6,95,70);doc.setFont('helvetica','bold');doc.setFontSize(5.5);
+    doc.text('✓ ACTIVO',x+4,y+40.5);
+    // QR code
+    if(qrImg){
+      try{doc.addImage(qrImg,'PNG',x+cW-22,y+17,20,20);}catch(e){}
+    }
+    // Linha decorativa inferior com cor do clube
+    doc.setFillColor(cr,cg,cb);doc.rect(x,y+cH-2,cW,2,'F');
+    doc.setFillColor(255,255,255);doc.roundedRect(x,y+cH-3,cW,3,1,1,'F');
+    doc.setFillColor(cr,cg,cb);doc.rect(x,y+cH-2,cW,2,'F');
+  }
+  // Gerar cartões
+  let idx=0;
+  let page=0;
+  for(let i=0;i<lista.length;i++){
+    const socio=lista[i];
+    const pos=idx%4;
+    if(pos===0&&idx>0){doc.addPage();page++;}
+    const col=pos%2;
+    const row=Math.floor(pos/2);
+    const x=cols[col];
+    const y=rows[row];
+    // QR com dados do sócio
+    const qrText=`GESTIOK|${clubeNome}|${socio.nome}|${socio.num_socio||''}|${epoca}`;
+    const qrImg=await qrDataUrl(qrText);
+    desenharCartao(x,y,socio,qrImg);
+    idx++;
+  }
+  // Linhas de corte em todas as páginas
+  const totalPages=doc.getNumberOfPages();
+  for(let p=1;p<=totalPages;p++){
+    doc.setPage(p);
+    doc.setDrawColor(180,180,180);doc.setLineWidth(0.2);doc.setLineDashPattern([1,1],0);
+    // Linha vertical central
+    doc.line(105,10,105,287);
+    // Linha horizontal central
+    doc.line(10,148.5,200,148.5);
+    doc.setLineDashPattern([],0);
+    doc.setTextColor(180,180,180);doc.setFontSize(5);
+    doc.text('✂',104,10);doc.text('✂',104,148);doc.text('✂',10,148);doc.text('✂',200,148);
+  }
+  doc.save(`cartoes-socios-${clubeNome.replace(/\s/g,'_')}.pdf`);
+  const ids=lista.map(s=>s.id);
+  await sb.from('socios').update({cartao_impresso:true}).in('id',ids);
+  ids.forEach(id=>{const s=(DB.socios||[]).find(x=>x.id===id);if(s)s.cartao_impresso=true;});
+  renderSocios();
+  toast(`✅ ${lista.length} cartões gerados e marcados como impressos!`);
+}
+
+// ═══ INIT ═══// ═══ INIT ═══
 document.getElementById('ses-data').value=new Date().toISOString().split('T')[0];
 document.getElementById('conv-data').value=new Date().toISOString().split('T')[0];
-loadAllData().then(()=>{
+loadAllData().then(async ()=>{await loadCaixa();
   console.log((DB.config.clube_nome||'AP Minho')+' — dados carregados do Supabase');
   // Inicializar currentGrupo com o primeiro grupo disponível
   if(GRUPOS.length>0){
