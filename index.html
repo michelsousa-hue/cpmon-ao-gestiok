@@ -1424,15 +1424,16 @@ function doLoginMesa(){
 }
 
 // ═══ NAV ═══
-document.querySelectorAll('.nav-item[data-page]').forEach(el=>{
-  el.addEventListener('click',()=>{
-    const p=el.dataset.page;
-    document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
-    el.classList.add('active');
-    document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
-    document.getElementById('page-'+p).classList.add('active');
-    currentPage=p; renderPage(p);
-  });
+function navGo(el){
+  const p=el.dataset.page; if(!p)return;
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  const pg=document.getElementById('page-'+p); if(pg)pg.classList.add('active');
+  currentPage=p; renderPage(p);
+}
+document.getElementById('sidebar').addEventListener('click',e=>{
+  const el=e.target.closest('.nav-item[data-page]'); if(el)navGo(el);
 });
 function renderPage(p){
   const map={dashboard:renderDashboard,presencas:renderPresencas,jogadores:renderJogadores,sessoes:renderSessoes,ficha:renderFichaPage,avaliacao:renderAvaliacao,relatorio:renderRelatorio,convocatoria:renderConvocatoria,jogo:renderJogoAoVivo,admin:renderAdmin,treinos:renderTreinos,metodologia:renderMetodologia,socios:renderSocios,comunicados:()=>{},caixa:renderCaixa};
