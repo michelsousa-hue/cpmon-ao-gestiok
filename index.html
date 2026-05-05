@@ -369,7 +369,7 @@ textarea.form-input{resize:vertical;min-height:70px}
           <div><div class="page-title">Jogadores</div></div>
           <div style="display:flex;gap:8px">
             <button class="btn" onclick="openModalSubirEscalao()" style="background:#EFF6FF;color:#1E40AF;border-color:#BFDBFE">⬆️ Subir Escalão</button>
-            <button class="btn btn-primary" onclick="openModal('modal-jogador')">+ Novo Jogador</button>
+            <button class="btn btn-primary" onclick="popularSelectsSub();editingJogId=null;editingFotoB64=null;document.querySelector('#modal-jogador .modal-title').textContent='Novo Jogador';document.querySelector('#modal-jogador .btn-primary').textContent='Adicionar Jogador';openModal('modal-jogador')">+ Novo Jogador</button>
           </div>
         </div>
         <div class="grupo-tabs" id="jog-gtabs"></div>
@@ -867,7 +867,7 @@ textarea.form-input{resize:vertical;min-height:70px}
       <div class="form-group"><label class="form-label">Nº camisola</label><input type="number" class="form-input" id="jog-num" min="1" max="99"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label class="form-label">Escalão</label><select class="form-input" id="jog-sub"><option>Sub9</option><option>Sub11</option><option>Sub13</option><option>Sub15</option></select></div>
+      <div class="form-group"><label class="form-label">Escalão</label><select class="form-input" id="jog-sub"></select></div>
       <div class="form-group"><label class="form-label">Posição</label><select class="form-input" id="jog-pos"><option>Avançado</option><option>Médio</option><option>Defesa</option><option>Guarda-redes</option></select></div>
     </div>
     <div class="form-row">
@@ -971,13 +971,11 @@ textarea.form-input{resize:vertical;min-height:70px}
         <label class="form-label">Filtrar por escalão atual</label>
         <select class="form-input" id="subir-filtro" onchange="renderSubirLista()">
           <option value="">— Todos —</option>
-          <option>Sub9</option><option>Sub11</option><option>Sub13</option><option>Sub15</option>
         </select>
       </div>
       <div class="form-group" style="margin-bottom:0">
         <label class="form-label">Novo escalão</label>
         <select class="form-input" id="subir-novo-escalao">
-          <option>Sub9</option><option>Sub11</option><option>Sub13</option><option>Sub15</option>
         </select>
       </div>
     </div>
@@ -1407,7 +1405,7 @@ function setupForUser(){
     document.querySelectorAll('.nav-section').forEach(el=>el.style.display='none');
   }
   if(currentUser.key==='t2')document.querySelector('[data-page="avaliacao"]')&&(document.querySelector('[data-page="avaliacao"]').style.display='none');
-  const defaultGrupo=currentUser.key==='t1'?'Sub9+Sub11':'Sub13+Sub15';
+  const defaultGrupo=GRUPOS[0]||'Sub9+Sub11';
   Object.keys(currentGrupo).forEach(k=>currentGrupo[k]=defaultGrupo);
 }
 
@@ -1452,15 +1450,25 @@ function buildGrupoTabs(cid,pageKey){
 }
 function setGrupo(page,g){currentGrupo[page]=g;renderPage(page);}
 function getSubsForGrupo(g){
-  // Check custom mapping first
   if(window._grupoSubs&&window._grupoSubs[g]) return window._grupoSubs[g];
-  // Default mapping
-  if(g==='Sub9+Sub11') return ['Sub9','Sub11'];
-  if(g==='Sub13+Sub15') return ['Sub13','Sub15'];
-  // Auto-parse: "Sub17+Sub20" -> ['Sub17','Sub20']
+  // Auto-parse: "Sub9+Sub11" -> ['Sub9','Sub11'], etc.
   return g.split('+').map(s=>s.trim()).filter(Boolean);
 }
 function jogsDoGrupo(g){return DB.jogadores.filter(j=>getSubsForGrupo(g).includes(j.sub));}
+
+// Retorna todos os escalões (subs) únicos de todos os grupos configurados
+function getAllSubs(){
+  const subs=[];
+  (GRUPOS.length?GRUPOS:['Sub9+Sub11','Sub13+Sub15']).forEach(g=>{
+    getSubsForGrupo(g).forEach(s=>{if(!subs.includes(s))subs.push(s);});
+  });
+  return subs;
+}
+// Dado um sub, devolve o grupo a que pertence
+function getGrupoForSub(sub){
+  return (GRUPOS.length?GRUPOS:['Sub9+Sub11','Sub13+Sub15']).find(g=>getSubsForGrupo(g).includes(sub))||GRUPOS[0]||'Sub9+Sub11';
+}
+
 function sessDoGrupo(g){return DB.sessoes.filter(s=>s.grupo===g);}
 // Stats de jogo de um jogador a partir do histórico
 function statsJogoJogador(jid){
@@ -1657,7 +1665,23 @@ function clearFoto(){
   document.getElementById('jog-foto-clear').style.display='none';
   document.getElementById('jog-foto-input').value='';
 }
+
+// Popular todos os selects de escalão com os subs reais dos GRUPOS
+function popularSelectsSub(){
+  const subs=getAllSubs();
+  const opts=subs.map(s=>`<option value="${s}">${s}</option>`).join('');
+  ['jog-sub','subir-filtro','subir-novo-escalao'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    if(id==='subir-filtro'){
+      el.innerHTML='<option value="">— Todos —</option>'+opts;
+    } else {
+      el.innerHTML=opts;
+    }
+  });
+}
 function openEditJogador(id){
+  popularSelectsSub();
   const j=DB.jogadores.find(x=>x.id===id);if(!j)return;
   editingJogId=id;
   document.getElementById('jog-nome').value=j.nome;
@@ -1751,7 +1775,7 @@ function renderFicha(){
     header.appendChild(btnPdfClin);
   } else { btnPdfClin.onclick=()=>gerarPDFClinico(jid); }
   const j=DB.jogadores.find(x=>x.id===jid);if(!j)return;
-  const g=['Sub9','Sub11'].includes(j.sub)?'Sub9+Sub11':'Sub13+Sub15';
+  const g=getGrupoForSub(j.sub);
   const sess=sessDoGrupo(g),st=statsJogador(j,sess);
   const mediaG=sess.length&&jogsDoGrupo(g).length?Math.round(jogsDoGrupo(g).reduce((a,x)=>a+statsJogador(x,sess).taxa,0)/jogsDoGrupo(g).length):0;
   const ini=j.nome.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
@@ -1997,7 +2021,7 @@ function renderAvalIndividual(){
 function renderAvalRegisto(){
   // Mostrar jogadores do grupo do treinador logado (ou todos se coord)
   const grupos=currentUser?.grupos||GRUPOS;
-  const subsPermitidos=grupos.flatMap(g=>g==='Sub9+Sub11'?['Sub9','Sub11']:['Sub13','Sub15']);
+  const subsPermitidos=grupos.flatMap(g=>getSubsForGrupo(g));
   const jogs=DB.jogadores.filter(j=>subsPermitidos.includes(j.sub)).sort((a,b)=>a.nome.localeCompare(b.nome));
   const pre=DB.avaliacoes.filter(d=>d.tipo==='pre');
   const pos=DB.avaliacoes.filter(d=>d.tipo==='pos');
@@ -3096,8 +3120,9 @@ function renderAdmin(){
   renderAdminMesa();
 }
 function openModalSubirEscalao(){
+  popularSelectsSub();
   document.getElementById('subir-filtro').value='';
-  document.getElementById('subir-novo-escalao').value='Sub11';
+  const allSubsArr=getAllSubs();document.getElementById('subir-novo-escalao').value=allSubsArr[1]||allSubsArr[0]||'';
   renderSubirLista();
   openModal('modal-subir-escalao');
 }
@@ -3105,7 +3130,10 @@ function renderSubirLista(){
   const filtro=document.getElementById('subir-filtro').value;
   const jogs=[...DB.jogadores].filter(j=>!filtro||j.sub===filtro).sort((a,b)=>a.nome.localeCompare(b.nome));
   // Auto-sugerir novo escalão com base no filtro
-  const subirMap={'Sub9':'Sub11','Sub11':'Sub13','Sub13':'Sub15','Sub15':'Sub15'};
+  // Mapa dinâmico: cada sub avança para o próximo na lista
+  const allSubs=getAllSubs();
+  const subirMap={};
+  allSubs.forEach((s,i)=>{subirMap[s]=allSubs[i+1]||s;});
   if(filtro&&subirMap[filtro]) document.getElementById('subir-novo-escalao').value=subirMap[filtro];
   const lista=document.getElementById('subir-lista');
   if(!jogs.length){lista.innerHTML='<div style="padding:12px;font-size:12px;color:var(--gray-400)">Nenhum jogador encontrado.</div>';return;}
@@ -4598,10 +4626,34 @@ function renderAdminPerfis(){
 }
 function renderAdminGrupos(){
   const el=document.getElementById('admin-grupos-list');if(!el)return;
-  el.innerHTML=GRUPOS.map((g,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:13px">
+  el.innerHTML=GRUPOS.map((g,i)=>`<div id="grupo-row-${i}" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:13px">
     <div style="flex:1"><strong>${g}</strong></div>
-    <button class="btn btn-sm" style="color:#DC2626;border-color:#FCA5A5" onclick="deleteGrupo(${i})">🗑️</button>
+    <button class="btn btn-sm" style="color:#2563EB;border-color:#BFDBFE" onclick="editGrupo(${i})">✏️</button>
+    ${GRUPOS.length>1?`<button class="btn btn-sm" style="color:#DC2626;border-color:#FCA5A5" onclick="deleteGrupo(${i})">🗑️</button>`:'<span style="font-size:10px;color:var(--gray-400)">Mínimo 1</span>'}
   </div>`).join('');
+}
+function editGrupo(i){
+  const row=document.getElementById('grupo-row-'+i);if(!row)return;
+  const nomeActual=GRUPOS[i];
+  const subsActual=window._grupoSubs?.[nomeActual]?.join(',')||nomeActual.split('+').join(',');
+  row.innerHTML=`
+    <input type="text" class="form-input" id="edit-grupo-nome-${i}" value="${nomeActual}" style="max-width:160px;font-size:13px">
+    <input type="text" class="form-input" id="edit-grupo-subs-${i}" value="${subsActual}" style="max-width:150px;font-size:13px" placeholder="Ex: Sub17,Sub20">
+    <button class="btn btn-sm" style="color:#059669;border-color:#6EE7B7" onclick="saveEditGrupo(${i})">✅</button>
+    <button class="btn btn-sm" onclick="renderGruposList()">✕</button>`;
+}
+async function saveEditGrupo(i){
+  const novoNome=document.getElementById('edit-grupo-nome-'+i)?.value.trim();
+  const novoSubs=document.getElementById('edit-grupo-subs-'+i)?.value.trim();
+  if(!novoNome){alert('Nome não pode estar vazio');return;}
+  const nomeAntigo=GRUPOS[i];
+  if(window._grupoSubs&&window._grupoSubs[nomeAntigo]){delete window._grupoSubs[nomeAntigo];}
+  if(novoSubs){window._grupoSubs=window._grupoSubs||{};window._grupoSubs[novoNome]=novoSubs.split(',').map(s=>s.trim()).filter(Boolean);}
+  (DB.sessoes||[]).forEach(s=>{if(s.grupo===nomeAntigo)s.grupo=novoNome;});
+  GRUPOS[i]=novoNome;
+  await saveGruposConfig();
+  renderAdmin();
+  toast('✅ Grupo actualizado!');
 }
 function openModalPerfil(key){
   const presetTesour=key==='__tesoureiro__';
@@ -4746,7 +4798,7 @@ async function gerarPDFJogador(){
   const jid=document.getElementById('fic-sel').value;
   if(!jid)return;
   const j=DB.jogadores.find(x=>x.id===jid);if(!j)return;
-  const g=['Sub9','Sub11'].includes(j.sub)?'Sub9+Sub11':'Sub13+Sub15';
+  const g=getGrupoForSub(j.sub);
   const sess=sessDoGrupo(g),st=statsJogador(j,sess);
   const mediaG=sess.length&&jogsDoGrupo(g).length?Math.round(jogsDoGrupo(g).reduce((a,x)=>a+statsJogador(x,sess).taxa,0)/jogsDoGrupo(g).length):0;
   const {jsPDF}=window.jspdf;
@@ -5100,7 +5152,7 @@ async function gerarRelatorioIA(jid){
   if(!btn||!textarea)return;
   btn.disabled=true;btn.textContent='⏳ A gerar...';
   const j=DB.jogadores.find(x=>x.id===jid);if(!j){btn.disabled=false;btn.textContent='✨ Gerar com IA';return;}
-  const g=['Sub9','Sub11'].includes(j.sub)?'Sub9+Sub11':'Sub13+Sub15';
+  const g=getGrupoForSub(j.sub);
   const sess=sessDoGrupo(g),st=statsJogador(j,sess);
   const mediaG=sess.length&&jogsDoGrupo(g).length?Math.round(jogsDoGrupo(g).reduce((a,x)=>a+statsJogador(x,sess).taxa,0)/jogsDoGrupo(g).length):0;
   const pre=DB.avaliacoes.find(d=>d.tipo==='pre'&&d.nome===j.nome);
