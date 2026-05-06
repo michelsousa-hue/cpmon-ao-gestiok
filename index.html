@@ -4599,7 +4599,7 @@ async function deleteDelegado(id){
 
 function renderAdminPerfis(){
   const el=document.getElementById('admin-perfis-list');if(!el)return;
-  const treinadores=profiles.filter(p=>p.key!=='coord'&&p.role!=='tesoureiro'&&p.role!=='coord');
+  const treinadores=profiles.filter(p=>p.role==='treinador'||p.role==='admin'||(p.key!=='coord'&&p.role!=='tesoureiro'&&p.role!=='coord'&&p.role!=='Acesso total'));
   const coordTecs=profiles.filter(p=>p.role==='coord');
   el.innerHTML=treinadores.length?treinadores.map(p=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:13px">
     <div style="flex:1">
@@ -4687,7 +4687,7 @@ async function savePerfil(){
   const isTesour=document.getElementById('perfil-tesoureiro').checked;
   const grupos=acessoTotal||isTesour?null:[...document.querySelectorAll('#perfil-grupos-checks input:checked')].map(x=>x.value);
   const isCoordTec=document.getElementById('perfil-coord')?.checked||false;
-  const roleVal=isTesour?'tesoureiro':isCoordTec?'coord':(acessoTotal?'Acesso total':grupos?grupos.join('+'):nome);
+  const roleVal=isTesour?'tesoureiro':isCoordTec?'coord':(acessoTotal?'admin':'treinador');
   if(editKey){
     const p=profiles.find(x=>x.key===editKey);
     if(p){p.name=nome;p.grupos=grupos;p.role=roleVal;p.licenca=licenca;p.cont=cont;if(pin&&pin.length===4)DB.config.pins[editKey]=pin;}
@@ -4708,7 +4708,7 @@ async function deletePerfil(key){
   if(idx>=0)profiles.splice(idx,1);
   delete DB.config.pins[key];
   await sb.from('config').upsert({key:'pins',value:JSON.stringify(DB.config.pins)});
-  await sb.from('config').upsert({key:'profiles',value:JSON.stringify(profiles.map(p=>({key:p.key,name:p.name,role:p.role||p.name,grupos:p.grupos})))});
+  await sb.from('config').upsert({key:'profiles',value:JSON.stringify(profiles.map(p=>({key:p.key,name:p.name,role:p.role,grupos:p.grupos,licenca:p.licenca||'',cont:p.cont||''})))});
   toast('🗑️ Perfil apagado');renderAdmin();
 }
 function addGrupoDinamico(){
