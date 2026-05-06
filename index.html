@@ -5287,37 +5287,47 @@ function renderCaixa(){
   const filConta=(document.getElementById('caixa-fil-conta')?.value)||'';
   const filTipo=(document.getElementById('caixa-fil-tipo')?.value)||'';
   const search=((document.getElementById('caixa-search')?.value)||'').toLowerCase();
-  // Popular select de épocas
   const selEpoca=document.getElementById('caixa-fil-epoca');
   if(selEpoca){
     const curVal=selEpoca.value||_currentEpoca();
     selEpoca.innerHTML=`<option value="">Todas as épocas</option>`+_epocas().map(e=>`<option value="${e}" ${e===curVal?'selected':''}>${e}</option>`).join('');
   }
   const filEpoca=(document.getElementById('caixa-fil-epoca')?.value)||'';
+  // Excluir transferências internas dos totais globais
   const filtered=movs.filter(m=>
     (!filConta||m.conta===filConta)&&
     (!filTipo||m.tipo===filTipo)&&
     (!filEpoca||m.epoca===filEpoca)&&
     (!search||(m.descricao||'').toLowerCase().includes(search)||(m.categoria||'').toLowerCase().includes(search))
   );
-  // Resumo
   const resumo=document.getElementById('caixa-resumo');
   if(resumo){
-    const rec=filtered.filter(m=>m.tipo==='receita').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
-    const desp=filtered.filter(m=>m.tipo==='despesa').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+    // Movimentos reais (excluir transferências internas do saldo global)
+    const reais=filtered.filter(m=>m.categoria!=='Transferência Interna');
+    const rec=reais.filter(m=>m.tipo==='receita').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+    const desp=reais.filter(m=>m.tipo==='despesa').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
     const saldo=rec-desp;
-    const recOf=filtered.filter(m=>m.tipo==='receita'&&m.conta==='oficial').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
-    const despOf=filtered.filter(m=>m.tipo==='despesa'&&m.conta==='oficial').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
-    const recDia=filtered.filter(m=>m.tipo==='receita'&&m.conta==='diario').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
-    const despDia=filtered.filter(m=>m.tipo==='despesa'&&m.conta==='diario').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+    // Por conta — incluir transferências internas (afectam saldo de cada conta mas não o global)
+    const saldoConta=c=>{
+      const r=filtered.filter(m=>m.conta===c&&m.tipo==='receita').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+      const d=filtered.filter(m=>m.conta===c&&m.tipo==='despesa').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+      // Saldo inicial
+      const si=(DB_CAIXA.saldos_iniciais||{})[_currentEpoca()]?.[c]||0;
+      return (r-d)+si;
+    };
+    const saldoDep=saldoConta('depositos');
+    const saldoCaixa=saldoConta('caixa_fisica');
+    const saldoOutros=saldoConta('outros');
+    const saldoOficial=saldoDep+saldoCaixa;
     resumo.innerHTML=`
       <div class="metric-card"><div class="metric-label">📈 Total Receitas</div><div class="metric-value metric-ok">€${rec.toFixed(2)}</div></div>
       <div class="metric-card"><div class="metric-label">📉 Total Despesas</div><div class="metric-value ${desp>0?'metric-danger':''}">€${desp.toFixed(2)}</div></div>
-      <div class="metric-card"><div class="metric-label">💰 Saldo</div><div class="metric-value ${saldo>=0?'metric-ok':'metric-danger'}">€${saldo.toFixed(2)}</div></div>
-      <div class="metric-card"><div class="metric-label">🏦 Conta Oficial</div><div class="metric-value ${(recOf-despOf)>=0?'metric-ok':'metric-danger'}">€${(recOf-despOf).toFixed(2)}</div></div>
-      <div class="metric-card"><div class="metric-label">💼 Dia-a-Dia</div><div class="metric-value ${(recDia-despDia)>=0?'metric-ok':'metric-danger'}">€${(recDia-despDia).toFixed(2)}</div></div>`;
+      <div class="metric-card"><div class="metric-label">💰 Saldo Global</div><div class="metric-value ${saldo>=0?'metric-ok':'metric-danger'}">€${(saldo+(Object.values((DB_CAIXA.saldos_iniciais||{})[_currentEpoca()]||{})).reduce((a,v)=>a+v,0)).toFixed(2)}</div></div>
+      <div class="metric-card" style="border-top:3px solid #1D4ED8"><div class="metric-label">🏦 Depósitos</div><div class="metric-value ${saldoDep>=0?'metric-ok':'metric-danger'}">€${saldoDep.toFixed(2)}</div></div>
+      <div class="metric-card" style="border-top:3px solid #059669"><div class="metric-label">💵 Caixa</div><div class="metric-value ${saldoCaixa>=0?'metric-ok':'metric-danger'}">€${saldoCaixa.toFixed(2)}</div></div>
+      <div class="metric-card" style="border-top:3px solid #7C3AED"><div class="metric-label">📂 Outros Fluxos</div><div class="metric-value ${saldoOutros>=0?'metric-ok':'metric-danger'}">€${saldoOutros.toFixed(2)}</div></div>
+      <div class="metric-card" style="border-top:3px solid #DC2626;grid-column:span 2"><div class="metric-label">🏛️ Contas Oficiais (Dep.+Caixa)</div><div class="metric-value ${saldoOficial>=0?'metric-ok':'metric-danger'}">€${saldoOficial.toFixed(2)}</div></div>`;
   }
-  // Lista
   const lista=document.getElementById('caixa-lista');
   if(!lista)return;
   if(!filtered.length){
@@ -5328,19 +5338,18 @@ function renderCaixa(){
     <th>Data</th><th>Tipo</th><th>Conta</th><th>Categoria</th><th>Descrição</th><th>Época</th><th style="text-align:right">Valor</th><th></th>
   </tr></thead><tbody>`+filtered.map(m=>`<tr>
     <td>${m.data?new Date(m.data+'T00:00:00').toLocaleDateString('pt-PT'):'-'}</td>
-    <td><span class="badge ${m.tipo==='receita'?'badge-ok':'badge-danger'}">${m.tipo==='receita'?'📈 Receita':'📉 Despesa'}</span></td>
-    <td><span style="font-size:11px;color:var(--gray-500)">${m.conta==='oficial'?'🏦 Oficial':'💼 Dia-a-Dia'}</span></td>
+    <td><span class="badge ${m.tipo==='receita'?'badge-ok':m.categoria==='Transferência Interna'?'':'badge-danger'}" style="${m.categoria==='Transferência Interna'?'background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE':''}">${m.categoria==='Transferência Interna'?'🔄 Transferência':m.tipo==='receita'?'📈 Receita':'📉 Despesa'}</span></td>
+    <td><span style="font-size:11px;color:var(--gray-500)">${_contaLabel(m.conta)}</span></td>
     <td>${m.categoria||'-'}</td>
     <td>${m.descricao||'-'}</td>
     <td style="font-size:11px;color:var(--gray-400)">${m.epoca||'-'}</td>
-    <td style="text-align:right;font-weight:600;color:${m.tipo==='receita'?'var(--green)':'#DC2626'}">€${parseFloat(m.valor||0).toFixed(2)}</td>
+    <td style="text-align:right;font-weight:600;color:${m.categoria==='Transferência Interna'?'#1D4ED8':m.tipo==='receita'?'var(--green)':'#DC2626'}">€${parseFloat(m.valor||0).toFixed(2)}</td>
     <td><div style="display:flex;gap:4px">
-      <button class="btn btn-sm" onclick="openModalMovimento('${m.id}')" style="color:#2563EB;border-color:#BFDBFE">✏️</button>
+      ${m.categoria!=='Transferência Interna'?`<button class="btn btn-sm" onclick="openModalMovimento('${m.id}')" style="color:#2563EB;border-color:#BFDBFE">✏️</button>`:''}
       <button class="btn btn-sm" onclick="deleteMovimento('${m.id}')" style="color:#DC2626;border-color:#FCA5A5">🗑️</button>
     </div></td>
   </tr>`).join('')+'</tbody></table>';
 }
-
 function openModalMovimento(id){
   const m=id?(DB_CAIXA.movimentos||[]).find(x=>x.id===id):null;
   document.getElementById('mov-edit-id').value=id||'';
