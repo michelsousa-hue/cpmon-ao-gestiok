@@ -705,6 +705,13 @@ textarea.form-input{resize:vertical;min-height:70px}
             <option value="externo">Pai / Adepto</option>
           </select>
           <input type="text" class="form-input" id="soc-search" onkeyup="renderSocios()" placeholder="🔍 Pesquisar…" style="max-width:200px">
+          <input type="date" class="form-input" id="soc-fil-data-pag" onchange="renderSocios()" title="Filtrar por data de pagamento" style="max-width:160px">
+          <select class="form-input" id="soc-fil-ordem" onchange="renderSocios()" style="max-width:170px">
+            <option value="nome">Ordem alfabética</option>
+            <option value="num_desc">Nº Sócio (recentes primeiro)</option>
+            <option value="num_asc">Nº Sócio (antigos primeiro)</option>
+            <option value="pag_desc">Último pagamento (recente)</option>
+          </select>
         </div>
         <!-- Modo Gestão -->
         <div id="soc-modo-gestao">
@@ -742,6 +749,7 @@ textarea.form-input{resize:vertical;min-height:70px}
           <div><div class="page-title">💰 Fluxo de Caixa</div><div class="page-sub">Receitas, despesas e balanço por época</div></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn" onclick="openModalCaixaCategoria()" style="background:#F0FDF4;color:#166534;border-color:#86EFAC">⚙️ Categorias</button>
+            <button class="btn" onclick="openModalTransferencia()" style="background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE">🔄 Transferência</button>
             <button class="btn btn-primary" onclick="openModalMovimento()">+ Movimento</button>
             <button class="btn" onclick="gerarPDFCaixa()">📄 Relatório PDF</button>
           </div>
@@ -769,6 +777,58 @@ textarea.form-input{resize:vertical;min-height:70px}
         </div>
       </div>
     </main>
+  </div>
+</div>
+
+<!-- MODAL TRANSFERÊNCIA INTERNA -->
+<div id="modal-transferencia" class="modal-bg">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><span class="modal-title">🔄 Transferência Interna</span><button class="modal-close" onclick="closeModal('modal-transferencia')">✕</button></div>
+    <div style="font-size:12px;color:var(--gray-500);margin-bottom:14px">Move dinheiro entre contas. Não afecta o saldo global.</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Conta de Origem</label>
+        <select class="form-input" id="transf-origem" onchange="updateTransfInfo()">
+          <option value="depositos">🏦 Depósitos</option>
+          <option value="caixa_fisica">💵 Caixa</option>
+          <option value="outros">📂 Outros Fluxos</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Conta de Destino</label>
+        <select class="form-input" id="transf-destino" onchange="updateTransfInfo()">
+          <option value="caixa_fisica">💵 Caixa</option>
+          <option value="depositos">🏦 Depósitos</option>
+          <option value="outros">📂 Outros Fluxos</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Data</label><input type="date" class="form-input" id="transf-data"></div>
+      <div class="form-group"><label class="form-label">Valor (€)</label><input type="number" class="form-input" id="transf-valor" min="0" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px"><label class="form-label">Descrição</label><input type="text" class="form-input" id="transf-descricao" placeholder="ex: Levantamento cheque nº 123"></div>
+    <div class="form-group" style="margin-bottom:16px"><label class="form-label">Época</label><select class="form-input" id="transf-epoca"></select></div>
+    <div id="transf-info" style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px;font-size:12px;color:#1D4ED8;margin-bottom:14px">
+      📌 Cria automaticamente:<br>• Débito em <b>Depósitos</b> (saída)<br>• Crédito em <b>Caixa</b> (entrada)
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveTransferencia()">Efectuar Transferência</button>
+      <button class="btn" onclick="closeModal('modal-transferencia')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SALDO INICIAL -->
+<div id="modal-saldo-inicial" class="modal-bg">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><span class="modal-title">🏁 Saldo Inicial de Época</span><button class="modal-close" onclick="closeModal('modal-saldo-inicial')">✕</button></div>
+    <div style="font-size:12px;color:var(--gray-500);margin-bottom:14px">Define os saldos de arranque para a época actual. Usa quando os valores transitados precisam de correcção.</div>
+    <div class="form-group" style="margin-bottom:10px"><label class="form-label">🏦 Saldo inicial — Depósitos (€)</label><input type="number" class="form-input" id="si-depositos" min="0" step="0.01" placeholder="0.00"></div>
+    <div class="form-group" style="margin-bottom:10px"><label class="form-label">💵 Saldo inicial — Caixa (€)</label><input type="number" class="form-input" id="si-caixa" min="0" step="0.01" placeholder="0.00"></div>
+    <div class="form-group" style="margin-bottom:16px"><label class="form-label">📂 Saldo inicial — Outros Fluxos (€)</label><input type="number" class="form-input" id="si-outros" min="0" step="0.01" placeholder="0.00"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveSaldoInicial()">Guardar Saldos</button>
+      <button class="btn" onclick="closeModal('modal-saldo-inicial')">Cancelar</button>
+    </div>
   </div>
 </div>
 
@@ -4067,13 +4127,21 @@ function _socFiltered(){
   const filEst=document.getElementById('soc-fil-estado')?.value||'';
   const filQuota=document.getElementById('soc-fil-quota')?.value||'';
   const filTipo=document.getElementById('soc-fil-tipo')?.value||'';
+  const filData=document.getElementById('soc-fil-data-pag')?.value||'';
+  const ordem=document.getElementById('soc-fil-ordem')?.value||'nome';
   const search=(document.getElementById('soc-search')?.value||'').toLowerCase();
-  return lista.filter(s=>
+  let filtered=lista.filter(s=>
     (!filEst||s.estado===filEst)&&
     (!filQuota||s.quota===filQuota)&&
     (!filTipo||s.tipo===filTipo)&&
+    (!filData||s.ultimo_pag===filData)&&
     (!search||s.nome.toLowerCase().includes(search))
   );
+  if(ordem==='num_desc') filtered=[...filtered].sort((a,b)=>(parseInt(b.num_socio)||0)-(parseInt(a.num_socio)||0));
+  else if(ordem==='num_asc') filtered=[...filtered].sort((a,b)=>(parseInt(a.num_socio)||0)-(parseInt(b.num_socio)||0));
+  else if(ordem==='pag_desc') filtered=[...filtered].sort((a,b)=>new Date(b.ultimo_pag||0)-new Date(a.ultimo_pag||0));
+  else filtered=[...filtered].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||'')));
+  return filtered;
 }
 
 function renderSocios(){
@@ -4282,7 +4350,8 @@ function _nextNumSocio(){
 
 function openModalSocio(id){
   const isCoord=!currentUser?.grupos&&currentUser?.role!=='tesoureiro';
-  if(!isCoord){toast('Apenas o coordenador pode gerir sócios.');return;}
+  const isTesour=currentUser?.role==='tesoureiro';
+  if(!isCoord&&!isTesour){toast('Sem permissão para gerir sócios.');return;}
   const s=id?(DB.socios||[]).find(x=>x.id===id):null;
   document.getElementById('soc-edit-id').value=id||'';
   document.getElementById('modal-soc-title').textContent=s?'Editar Sócio':'Novo Sócio';
@@ -4317,7 +4386,8 @@ function openModalSocio(id){
 
 async function saveSocio(){
   const isCoord=!currentUser?.grupos&&currentUser?.role!=='tesoureiro';
-  if(!isCoord){toast('Sem permissão.');return;}
+  const isTesour=currentUser?.role==='tesoureiro';
+  if(!isCoord&&!isTesour){toast('Sem permissão.');return;}
   const tipo=document.getElementById('soc-tipo').value;
   const atleta_id=tipo==='atleta'?(document.getElementById('soc-atleta-id').value||null):null;
   const atleta=atleta_id?DB.jogadores.find(x=>x.id===atleta_id):null;
@@ -4372,8 +4442,8 @@ async function deleteSocio(id){
 }
 
 async function gerarPDFSocios(){
-  const lista=DB.socios||[];
-  if(!lista.length){toast('Sem sócios para exportar');return;}
+  const lista=_socFiltered();
+  if(!lista.length){toast('Sem sócios para exportar (verifica os filtros)');return;}
   try{
     const {jsPDF}=window.jspdf;
     const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
@@ -4389,7 +4459,14 @@ async function gerarPDFSocios(){
     doc.setTextColor(...WHITE);doc.setFontSize(15);doc.setFont('helvetica','bold');
     doc.text(clubeNome+' - Lista de Sócios',margin+24,11);
     doc.setFontSize(9);doc.setFont('helvetica','normal');
-    doc.text('Época '+epoca+' · Gerado em '+new Date().toLocaleDateString('pt-PT'),margin+24,18);
+    const filDesc=[];
+    const _fe=document.getElementById('soc-fil-estado')?.value;
+    const _fq=document.getElementById('soc-fil-quota')?.value;
+    const _ft=document.getElementById('soc-fil-tipo')?.value;
+    const _fd=document.getElementById('soc-fil-data-pag')?.value;
+    if(_fe)filDesc.push(_fe);if(_fq)filDesc.push(_fq);if(_ft)filDesc.push(_ft==='atleta'?'Atletas':'Pais/Adeptos');if(_fd)filDesc.push('Pag. '+new Date(_fd+'T00:00:00').toLocaleDateString('pt-PT'));
+    const filTxt=filDesc.length?(' · Filtro: '+filDesc.join(', ')):'';
+    doc.text('Época '+epoca+' · '+lista.length+' sócios'+filTxt+' · Gerado em '+new Date().toLocaleDateString('pt-PT'),margin+24,18);
     // Cabeçalho tabela
     let y=34;
     doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...BLK);
@@ -4397,8 +4474,7 @@ async function gerarPDFSocios(){
     y+=3;doc.setDrawColor(...LGRAY);doc.line(margin,y,W-margin,y);y+=5;
     doc.setFont('helvetica','normal');
     // Linhas
-    const sorted=[...lista].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||'')));
-    for(const s of sorted){
+    for(const s of lista){
       if(y>270){doc.addPage();y=20;}
       const nome=String(s.nome||'—').substring(0,30);
       const numS=s.num_socio?String(s.num_socio)+' ':'';
@@ -5195,6 +5271,8 @@ async function loadCaixa(){
   if(catR?.data?.length){
     const cfg=catR.data.find(x=>x.key==='categorias');
     if(cfg)try{DB_CAIXA.categorias=JSON.parse(cfg.value);}catch(e){}
+    const siCfg=catR.data.find(x=>x.key==='saldos_iniciais');
+    if(siCfg)try{DB_CAIXA.saldos_iniciais=JSON.parse(siCfg.value);}catch(e){}
   }
 }
 
@@ -5369,6 +5447,53 @@ async function fecharEpoca(){
   document.getElementById('nova-epoca-nome').value='';
   closeModal('modal-caixa-cat');toast(`✅ Época fechada! Saldo transitado para ${nova}`);renderCaixa();
 }
+function updateTransfInfo(){
+  const origem=document.getElementById('transf-origem')?.value||'depositos';
+  const destino=document.getElementById('transf-destino')?.value||'caixa_fisica';
+  const el=document.getElementById('transf-info');
+  if(el)el.innerHTML=`📌 Cria automaticamente:<br>• Débito em <b>${_contaLabel(origem)}</b> (saída)<br>• Crédito em <b>${_contaLabel(destino)}</b> (entrada)`;
+}
+async function saveTransferencia(){
+  const valor=parseFloat(document.getElementById('transf-valor').value)||0;
+  if(!valor){toast('Introduz um valor');return;}
+  const origem=document.getElementById('transf-origem').value||'depositos';
+  const destino=document.getElementById('transf-destino').value||'caixa_fisica';
+  if(origem===destino){toast('Origem e destino não podem ser iguais');return;}
+  const data=document.getElementById('transf-data').value;
+  const descricao=document.getElementById('transf-descricao').value.trim()||`Transferência ${_contaLabel(origem)} → ${_contaLabel(destino)}`;
+  const epoca=document.getElementById('transf-epoca').value;
+  const debito={id:uid(),tipo:'despesa',conta:origem,data,valor,categoria:'Transferência Interna',descricao,epoca};
+  const credito={id:uid(),tipo:'receita',conta:destino,data,valor,categoria:'Transferência Interna',descricao,epoca};
+  await sb.from('caixa').insert([debito,credito]);
+  DB_CAIXA.movimentos=DB_CAIXA.movimentos||[];
+  DB_CAIXA.movimentos.unshift(credito,debito);
+  closeModal('modal-transferencia');
+  toast('✅ Transferência efectuada! Depósitos debitados, Caixa creditada.');
+  renderCaixa();
+}
+
+// ═══ SALDO INICIAL ═══
+function openModalSaldoInicial(){
+  const epoca=_currentEpoca();
+  const si=(DB_CAIXA.saldos_iniciais||{})[epoca]||{};
+  document.getElementById('si-depositos').value=si.depositos||'';
+  document.getElementById('si-caixa').value=si.caixa_fisica||'';
+  document.getElementById('si-outros').value=si.outros||'';
+  openModal('modal-saldo-inicial');
+}
+async function saveSaldoInicial(){
+  const epoca=_currentEpoca();
+  DB_CAIXA.saldos_iniciais=DB_CAIXA.saldos_iniciais||{};
+  DB_CAIXA.saldos_iniciais[epoca]={
+    depositos:parseFloat(document.getElementById('si-depositos').value)||0,
+    caixa_fisica:parseFloat(document.getElementById('si-caixa').value)||0,
+    outros:parseFloat(document.getElementById('si-outros').value)||0
+  };
+  await sb.from('caixa_config').upsert({key:'saldos_iniciais',value:JSON.stringify(DB_CAIXA.saldos_iniciais)});
+  closeModal('modal-saldo-inicial');
+  toast('✅ Saldos iniciais guardados!');
+  renderCaixa();
+}
 function gerarPDFCaixa(){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
@@ -5425,8 +5550,10 @@ function gerarPDFCaixa(){
 
 // ═══ CARTÕES DE SÓCIO CR80 ═══
 async function gerarCartoesSocios(){
-  const lista=(DB.socios||[]).filter(s=>s.estado==='Activo'&&s.quota==='Paga'&&!s.cartao_impresso);
-  if(!lista.length){toast('✅ Todos os sócios já têm cartão impresso! Usa 🔄 para reimprimir.');return;}
+  const _filtrado=_socFiltered().filter(s=>!s.cartao_impresso);
+  const _temFiltro=!!(document.getElementById('soc-fil-estado')?.value||document.getElementById('soc-fil-quota')?.value||document.getElementById('soc-fil-data-pag')?.value);
+  const lista=(_temFiltro&&_filtrado.length)?_filtrado:(DB.socios||[]).filter(s=>s.estado==='Activo'&&s.quota==='Paga'&&!s.cartao_impresso);
+  if(!lista.length){toast('Sem sócios para gerar cartões com os filtros actuais');return;}
   toast('A gerar cartões… aguarda ⏳');
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
@@ -5551,7 +5678,6 @@ async function gerarCartoesSocios(){
 // ═══ INIT ═══// ═══ INIT ═══// ═══ CARTÕES DE SÓCIO CR80 ═══
 async function gerarCartoesSocios(){
   const lista=(DB.socios||[]).filter(s=>s.estado==='Activo'&&s.quota==='Paga'&&!s.cartao_impresso);
-  if(!lista.length){toast('✅ Todos os sócios já têm cartão impresso! Usa 🔄 para reimprimir.');return;}
   toast('A gerar cartões… aguarda ⏳');
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
