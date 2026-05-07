@@ -5522,8 +5522,10 @@ function gerarPDFCaixa(){
   // Resumo
   const movs=DB_CAIXA.movimentos||[];
   const movsEp=movs.filter(m=>!m.epoca||m.epoca===epoca);
-  const rec=movsEp.filter(m=>m.tipo==='receita').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
-  const desp=movsEp.filter(m=>m.tipo==='despesa').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+  // Excluir transferências internas dos totais (são neutras)
+  const movsReais=movsEp.filter(m=>m.categoria!=='Transferência Interna');
+  const rec=movsReais.filter(m=>m.tipo==='receita').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+  const desp=movsReais.filter(m=>m.tipo==='despesa').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
   doc.setTextColor(30,30,30);doc.setFont('helvetica','bold');doc.setFontSize(11);
   doc.text('Resumo',mL,y);y+=7;
   doc.setFont('helvetica','normal');doc.setFontSize(10);
