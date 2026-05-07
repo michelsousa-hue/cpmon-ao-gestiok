@@ -4716,7 +4716,7 @@ function editGrupo(i){
     <input type="text" class="form-input" id="edit-grupo-nome-${i}" value="${nomeActual}" style="max-width:160px;font-size:13px">
     <input type="text" class="form-input" id="edit-grupo-subs-${i}" value="${subsActual}" style="max-width:150px;font-size:13px" placeholder="Ex: Sub17,Sub20">
     <button class="btn btn-sm" style="color:#059669;border-color:#6EE7B7" onclick="saveEditGrupo(${i})">✅</button>
-    <button class="btn btn-sm" onclick="renderGruposList()">✕</button>`;
+    <button class="btn btn-sm" onclick="renderAdmin()">✕</button>`;
 }
 async function saveEditGrupo(i){
   const novoNome=document.getElementById('edit-grupo-nome-'+i)?.value.trim();
