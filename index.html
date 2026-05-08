@@ -832,6 +832,28 @@ textarea.form-input{resize:vertical;min-height:70px}
   </div>
 </div>
 
+<!-- MODAL QUOTA CAIXA -->
+<div id="modal-quota-caixa" class="modal-bg">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header"><span class="modal-title">💰 Registar Pagamento</span><button class="modal-close" onclick="closeModal('modal-quota-caixa')">✕</button></div>
+    <div style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Escolhe em que conta deve entrar o pagamento da quota.</div>
+    <div id="quota-caixa-info" style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;padding:10px;font-size:13px;margin-bottom:14px"></div>
+    <input type="hidden" id="quota-caixa-socio-id">
+    <div class="form-group" style="margin-bottom:16px">
+      <label class="form-label">Conta de Entrada</label>
+      <select class="form-input" id="quota-caixa-conta">
+        <option value="depositos">🏦 Depósitos (cheque/transferência)</option>
+        <option value="caixa_fisica">💵 Caixa (dinheiro em mão)</option>
+        <option value="outros">📂 Outros Fluxos</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="confirmarQuotaCaixa()">✅ Confirmar Pagamento</button>
+      <button class="btn" onclick="closeModal('modal-quota-caixa')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL MOVIMENTO CAIXA -->
 <div id="modal-movimento" class="modal-bg">
   <div class="modal" style="max-width:440px">
@@ -1465,8 +1487,13 @@ function setupForUser(){
     document.querySelectorAll('.nav-section').forEach(el=>el.style.display='none');
   }
   if(currentUser.key==='t2')document.querySelector('[data-page="avaliacao"]')&&(document.querySelector('[data-page="avaliacao"]').style.display='none');
-  const defaultGrupo=GRUPOS[0]||'Sub9+Sub11';
+  let defaultGrupo=GRUPOS[0]||'Sub9+Sub11';
+  if(isTreinador&&currentUser.grupos&&currentUser.grupos.length>0){
+    const grupoDoTreinador=GRUPOS.find(g=>currentUser.grupos.includes(g))||currentUser.grupos[0]||GRUPOS[0];
+    defaultGrupo=grupoDoTreinador;
+  }
   Object.keys(currentGrupo).forEach(k=>currentGrupo[k]=defaultGrupo);
+  currentGrupoTreinos=defaultGrupo;
 }
 
 function doLoginMesa(){
@@ -4316,6 +4343,10 @@ async function _guardarLinha(id){
   showLoading(false);
   toast('\u2705 Sócio guardado!');
   _renderSociosRapido(!currentUser?.grupos,new Set());
+  if(rec.quota==='Paga'){
+    const s=(DB.socios||[]).find(x=>x.id===id);
+    if(s&&parseFloat(s.valor||0)>0){abrirModalQuotaCaixa(id,s.nome,s.valor,s.epoca);}
+  }
 }
 
 async function guardarModoRapido(){
@@ -4343,6 +4374,34 @@ async function guardarModoRapido(){
   renderSocios();
 }
 
+// ═══ QUOTA → CAIXA AUTOMÁTICO ═══
+function abrirModalQuotaCaixa(socioId, nomeSocio, valor, epoca){
+  document.getElementById('quota-caixa-socio-id').value=socioId;
+  document.getElementById('quota-caixa-info').innerHTML=
+    `<strong>${nomeSocio}</strong><br>Valor: <strong>€${parseFloat(valor||0).toFixed(2)}</strong> · Época: ${epoca||_currentEpoca()}`;
+  document.getElementById('quota-caixa-conta').value='depositos';
+  openModal('modal-quota-caixa');
+}
+async function confirmarQuotaCaixa(){
+  const socioId=document.getElementById('quota-caixa-socio-id').value;
+  const conta=document.getElementById('quota-caixa-conta').value;
+  const s=(DB.socios||[]).find(x=>x.id===socioId);
+  if(!s){closeModal('modal-quota-caixa');return;}
+  const mov={
+    id:uid(),tipo:'receita',conta,
+    data:new Date().toISOString().split('T')[0],
+    valor:parseFloat(s.valor||0),
+    categoria:'Quotas',
+    descricao:`Quota — ${s.nome} (Nº${s.num_socio||'-'})`,
+    epoca:_currentEpoca()
+  };
+  await sb.from('caixa').insert(mov);
+  DB_CAIXA.movimentos=DB_CAIXA.movimentos||[];
+  DB_CAIXA.movimentos.unshift(mov);
+  _sortMovimentos();
+  closeModal('modal-quota-caixa');
+  toast('✅ Quota registada no Fluxo de Caixa!');
+}
 function _nextNumSocio(){
   const nums=(DB.socios||[]).map(s=>parseInt(s.num_socio)||0);
   return nums.length?Math.max(...nums)+1:1;
@@ -4421,6 +4480,10 @@ async function saveSocio(){
   closeModal('modal-socio');
   toast('✅ Sócio guardado!');
   renderSocios();
+  if(rec.quota==='Paga'&&parseFloat(rec.valor||0)>0){
+    const socioId=editId||rec.id;
+    abrirModalQuotaCaixa(socioId, rec.nome, rec.valor, _currentEpoca());
+  }
 }
 
 async function reimprimirCartao(id){
@@ -5391,7 +5454,7 @@ async function saveMovimento(){
   } else {
     rec.id=uid();
     const {error}=await sb.from('caixa').insert(rec);
-    if(!error){DB_CAIXA.movimentos=DB_CAIXA.movimentos||[];DB_CAIXA.movimentos.unshift(rec);}
+    if(!error){DB_CAIXA.movimentos=DB_CAIXA.movimentos||[];DB_CAIXA.movimentos.unshift(rec);_sortMovimentos();}
   }
   closeModal('modal-movimento');toast('✅ Movimento guardado!');renderCaixa();
 }
@@ -5476,6 +5539,7 @@ async function saveTransferencia(){
   await sb.from('caixa').insert([debito,credito]);
   DB_CAIXA.movimentos=DB_CAIXA.movimentos||[];
   DB_CAIXA.movimentos.unshift(credito,debito);
+  _sortMovimentos();
   closeModal('modal-transferencia');
   toast('✅ Transferência efectuada! Depósitos debitados, Caixa creditada.');
   renderCaixa();
