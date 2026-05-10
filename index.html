@@ -4770,10 +4770,11 @@ function renderAdminPerfis(){
 }
 function renderAdminGrupos(){
   const el=document.getElementById('admin-grupos-list');if(!el)return;
+  if(!GRUPOS.length){el.innerHTML='<div style="font-size:12px;color:var(--gray-400);padding:8px 0">Sem grupos — cria em Administração ⚙️</div>';return;}
   el.innerHTML=GRUPOS.map((g,i)=>`<div id="grupo-row-${i}" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:13px">
     <div style="flex:1"><strong>${g}</strong></div>
     <button class="btn btn-sm" style="color:#2563EB;border-color:#BFDBFE" onclick="editGrupo(${i})">✏️</button>
-    ${GRUPOS.length>1?`<button class="btn btn-sm" style="color:#DC2626;border-color:#FCA5A5" onclick="deleteGrupo(${i})">🗑️</button>`:'<span style="font-size:10px;color:var(--gray-400)">Mínimo 1</span>'}
+    <button class="btn btn-sm" style="color:#DC2626;border-color:#FCA5A5" onclick="deleteGrupo(${i})">🗑️</button>
   </div>`).join('');
 }
 function editGrupo(i){
