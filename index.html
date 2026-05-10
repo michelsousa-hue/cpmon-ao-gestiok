@@ -1463,7 +1463,9 @@ function renderLoginProfiles(){
       <div><div class="pin-profile-name">${displayName}</div><div class="pin-profile-role">${roleLabel}</div></div>
     </div>`;
   }
-  list.innerHTML=sorted.map(p=>profileCard(p,false)).join('')+(profiles.length>0?profileCard(null,true):'');
+  // Mostrar Mesa de Jogo só se houver mais perfis além do coordenador
+  const temOutrosPerfis=profiles.some(p=>p.key!=='coord');
+  list.innerHTML=sorted.map(p=>profileCard(p,false)).join('')+(temOutrosPerfis?profileCard(null,true):'');
 }
 
 function setupForUser(){
