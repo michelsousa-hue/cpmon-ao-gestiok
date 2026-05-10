@@ -4870,7 +4870,6 @@ function addGrupoDinamico(){
   toast('✅ Grupo adicionado!');
 }
 function deleteGrupo(i){
-  if(GRUPOS.length<=1){alert('Deve existir pelo menos 1 grupo');return;}
   if(!confirm('Apagar grupo "'+ GRUPOS[i]+'"?'))return;
   GRUPOS.splice(i,1);
   saveGruposConfig();
