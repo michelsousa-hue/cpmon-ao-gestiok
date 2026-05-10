@@ -1489,6 +1489,7 @@ function setupForUser(){
     document.querySelectorAll('.nav-section').forEach(el=>el.style.display='none');
   }
   if(currentUser.key==='t2')document.querySelector('[data-page="avaliacao"]')&&(document.querySelector('[data-page="avaliacao"]').style.display='none');
+  const isTreinador=!!(currentUser.grupos&&currentUser.grupos.length>0&&currentUser.key!=='coord'&&currentUser.role!=='tesoureiro'&&currentUser.role!=='coord');
   let defaultGrupo=GRUPOS[0]||'Sub9+Sub11';
   if(isTreinador&&currentUser.grupos&&currentUser.grupos.length>0){
     const grupoDoTreinador=GRUPOS.find(g=>currentUser.grupos.includes(g))||currentUser.grupos[0]||GRUPOS[0];
@@ -2080,7 +2081,9 @@ function getAvalData(tipo){
 }
 function renderAvaliacao(){
   const grupos=currentUser?.grupos||GRUPOS;
-  const subLabel=grupos.join(' + ')||'Todos os escalões';
+  // Mostrar os escalões reais (subs) em vez do nome do grupo
+  const todosOsSubs=grupos.flatMap(g=>getSubsForGrupo(g));
+  const subLabel=(todosOsSubs.length?todosOsSubs:grupos).join(' + ')||'Todos os escalões';
   const subEl=document.getElementById('aval-page-sub');
   if(subEl) subEl.textContent=subLabel+' · Competências individuais';
   renderAvalRanking();
@@ -2433,7 +2436,7 @@ async function gerarPDFConvocatoria(){try{
   // Treinadores do grupo (pode haver mais do que um)
   const treinadoresGrupo=profiles.filter(p=>p.grupos&&p.grupos.includes(g));
   // Delegados do grupo
-  const delegadosGrupo=(DB.delegados||[]).filter(d=>(d.grupos||[]).includes(g));
+  const delegadosGrupo=(DB.delegados||[]).filter(d=>(Array.isArray(d.grupos)?d.grupos:(d.grupos?[d.grupos]:[])).includes(g));
   // Todos juntos
   const intervenientes=[
     ...treinadoresGrupo.map(p=>({nome:p.name,licenca:p.licenca||'',role:'Treinador'})),
@@ -4688,7 +4691,7 @@ function renderAdminDelegados(){
     <div style="flex:1">
       <strong>${d.nome}</strong>
       <span style="color:var(--gray-400);font-size:11px;margin-left:6px">Lic. ${d.licenca||'—'}</span>
-      <div style="font-size:11px;color:var(--gray-500);margin-top:2px">${(d.grupos||[]).join(', ')||'Sem escalão'}</div>
+      <div style="font-size:11px;color:var(--gray-500);margin-top:2px">${(Array.isArray(d.grupos)?d.grupos:(d.grupos?[d.grupos]:[])).join(', ')||'Sem escalão'}</div>
     </div>
     <button class="btn btn-sm" onclick="openModalDelegado('${d.id}')">✏️</button>
     <button class="btn btn-sm" style="color:#DC2626;border-color:#FCA5A5" onclick="deleteDelegado('${d.id}')">🗑️</button>
