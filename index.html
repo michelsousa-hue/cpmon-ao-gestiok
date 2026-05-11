@@ -395,12 +395,15 @@ textarea.form-input{resize:vertical;min-height:70px}
       </div>
       <div id="page-avaliacao" class="page">
         <div class="page-header"><div class="page-title">Avaliação Técnica</div><div class="page-sub" id="aval-page-sub">Competências individuais</div></div>
+        <!-- Selector de ficha (visível só quando há mais de 1 ficha activa) -->
+        <div id="aval-ficha-selector" style="display:none;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center"></div>
         <div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap" id="aval-tabs">
           <div class="gtab active" onclick="setAvalView('ranking',this)">Ranking</div>
           <div class="gtab" onclick="setAvalView('individual',this)">Individual + SWOT</div>
           <div class="gtab" onclick="setAvalView('grupo',this)">Análise de Grupo</div>
           <div class="gtab" onclick="setAvalView('evolucao',this)">Evolução</div>
           <div class="gtab" onclick="setAvalView('registo',this)" style="background:#FEF3C7;color:#92400E;border-color:#FCD34D">✏️ Registar Avaliação</div>
+          <div class="gtab" id="aval-tab-fichas" onclick="setAvalView('fichas',this)" style="display:none;background:#EDE9FE;color:#5B21B6;border-color:#C4B5FD">⚙️ Gerir Fichas</div>
         </div>
         <div id="aval-ranking" class="aval-view"></div>
         <div id="aval-individual" class="aval-view" style="display:none">
@@ -410,6 +413,7 @@ textarea.form-input{resize:vertical;min-height:70px}
         <div id="aval-grupo" class="aval-view" style="display:none"></div>
         <div id="aval-registo" class="aval-view" style="display:none"></div>
         <div id="aval-evolucao" class="aval-view" style="display:none"></div>
+        <div id="aval-fichas" class="aval-view" style="display:none"></div>
       </div>
       <div id="page-treinos" class="page">
         <div class="page-header">
@@ -1263,7 +1267,39 @@ const COMPS = [
 ];
 
 // ═══ STATE ═══
-let DB = { jogadores:[], sessoes:[], presencas:{}, avaliacoes:[], config:{pins:{coord:'1234',t1:'1111',t2:'2222'},epoca:'2025/2026'}, delegados:[], treinos:[] };
+let DB = { jogadores:[], sessoes:[], presencas:{}, avaliacoes:[], fichas_avaliacao:[], config:{pins:{coord:'1234',t1:'1111',t2:'2222'},epoca:'2025/2026'}, delegados:[], treinos:[] };
+// Ficha legado (19 gestos originais — nunca apagar para preservar registos existentes)
+const FICHA_LEGACY_ID = 'iniciacao_legacy';
+const FICHA_LEGACY = {
+  id: FICHA_LEGACY_ID,
+  nome: 'Iniciação',
+  descricao: 'Patinagem, Remate e Técnica de bola — avaliação de base',
+  ativo: true,
+  ordem: 0,
+  gestos: [
+    {key:'pat_fr',label:'Patinagem frontal',cat:'Patinagem'},
+    {key:'pat_tr',label:'Patinagem para trás',cat:'Patinagem'},
+    {key:'rotacao',label:'Rotação Fr/T e T/Fr',cat:'Patinagem'},
+    {key:'trav_d',label:'Travagem rodas D',cat:'Patinagem'},
+    {key:'trav_e',label:'Travagem rodas E',cat:'Patinagem'},
+    {key:'curv_frd',label:'Curvar pés Fr/D',cat:'Patinagem'},
+    {key:'curv_fre',label:'Curvar pés Fr/E',cat:'Patinagem'},
+    {key:'curv_trd',label:'Curvar pés Tr/D',cat:'Patinagem'},
+    {key:'curv_tre',label:'Curvar pés Tr/E',cat:'Patinagem'},
+    {key:'trav_tacos',label:'Travagem tacos trás',cat:'Patinagem'},
+    {key:'charlot_d',label:'Charlot D',cat:'Patinagem'},
+    {key:'charlot_e',label:'Charlot E',cat:'Patinagem'},
+    {key:'remate_d',label:'Remate D',cat:'Remate'},
+    {key:'remate_e',label:'Remate E',cat:'Remate'},
+    {key:'bola_d',label:'Bola enrolada D',cat:'Remate'},
+    {key:'bola_e',label:'Bola enrolada E',cat:'Remate'},
+    {key:'controlo',label:'Controlo/condução',cat:'Técnica bola'},
+    {key:'passe',label:'Passe',cat:'Técnica bola'},
+    {key:'recepcao',label:'Receção',cat:'Técnica bola'},
+  ]
+};
+// Ficha activa para novas avaliações (pode ser substituída em runtime)
+let fichaAtiva = FICHA_LEGACY;
 let jogoState = { scoreH:0, scoreA:0, eventos:[], emCampo:[], tempos:{}, timerSec:0, running:false, paused:false, grupo:'', numPartes:2, durParte:15, parteAtual:1, parteIniciada:false, powerPlays:{ favor:{ ativo:false, inicio:null, lista:[] }, contra:{ ativo:false, inicio:null, lista:[] } }, defesas:0, defesasJog:{}, golosJog:{}, convocados:[] };
 let currentUser = null;
 let currentPin = '';
@@ -1302,7 +1338,7 @@ async function loadAllData(){
   _loadingData = true;
   showLoading(true);
   try {
-    const [jogsR, sessR, avalR, cfgR, jogosR, delegR, treinosR, metR, clinR, socR] = await Promise.all([
+    const [jogsR, sessR, avalR, cfgR, jogosR, delegR, treinosR, metR, clinR, socR, fichasR] = await Promise.all([
       sb.from('jogadores').select('*').order('nome'),
       sb.from('sessoes').select('*').order('data',{ascending:false}),
       sb.from('avaliacoes').select('*'),
@@ -1313,6 +1349,7 @@ async function loadAllData(){
       sb.from('metodologia').select('*').order('criado_em',{ascending:false}),
       sb.from('clinico').select('*'),
       sb.from('socios').select('*').order('nome'),
+      sb.from('fichas_avaliacao').select('*').order('ordem',{ascending:true}),
     ]);
     // Deduplicate jogadores by id (fix for repeated players bug)
     const rawJogs = jogsR.data || [];
@@ -1324,6 +1361,11 @@ async function loadAllData(){
     });
     DB.sessoes = sessR.data || [];
     DB.avaliacoes = avalR.data || [];
+    // Fichas de avaliação — sempre inclui a legado na posição 0
+    const fichasDB = fichasR.data || [];
+    DB.fichas_avaliacao = [FICHA_LEGACY, ...fichasDB.filter(f=>f.id!==FICHA_LEGACY_ID)];
+    // Ficha activa = primeira activa por ordem (default: legado)
+    fichaAtiva = DB.fichas_avaliacao.find(f=>f.ativo) || FICHA_LEGACY;
     // Load all presencas with pagination
     DB.presencas = {};
     let presPage = 0;
@@ -2063,6 +2105,39 @@ function renderFicha(){
 
 
 // ═══ AVALIAÇÃO ═══
+// Devolve os gestos de uma avaliação (suporta ficha_id ou legado por posição)
+function getGestosForAval(aval){
+  if(aval.ficha_id && aval.ficha_id !== FICHA_LEGACY_ID){
+    const ficha = DB.fichas_avaliacao.find(f=>f.id===aval.ficha_id);
+    return ficha ? ficha.gestos : FICHA_LEGACY.gestos;
+  }
+  return FICHA_LEGACY.gestos;
+}
+// Calcula médias por categoria para uma avaliação (genérico para qualquer ficha)
+function calcAvalStats(aval){
+  const gestos = getGestosForAval(aval);
+  const vals = aval.vals;
+  const cats = [...new Set(gestos.map(g=>g.cat))];
+  const catAvgs = {};
+  cats.forEach(cat=>{
+    const idxs = gestos.map((g,i)=>g.cat===cat?i:-1).filter(i=>i>=0);
+    catAvgs[cat] = idxs.length ? avg(idxs.map(i=>vals[i]||0)) : 0;
+  });
+  // compatibilidade com código legado (pat/rem/tec)
+  const pat = catAvgs['Patinagem'] || avg(vals.slice(0,12));
+  const rem = catAvgs['Remate'] || avg(vals.slice(12,16));
+  const tec = catAvgs['Técnica bola'] || avg(vals.slice(16));
+  return { pat, rem, tec, catAvgs, media: avg(vals), gestos };
+}
+function getAvalData(tipo, fichaId){
+  // Se fichaId especificado, filtra por ficha; senão usa todas (inclui legado)
+  let avals = DB.avaliacoes.filter(d=>d.tipo===tipo);
+  if(fichaId) avals = avals.filter(d=>(d.ficha_id||FICHA_LEGACY_ID)===fichaId);
+  return avals.map(d=>{
+    const s = calcAvalStats(d);
+    return{...d,...s};
+  }).sort((a,b)=>b.media-a.media);
+}
 function setAvalView(v,el){
   document.querySelectorAll('.aval-view').forEach(x=>x.style.display='none');
   document.getElementById('aval-'+v).style.display='block';
@@ -2072,56 +2147,75 @@ function setAvalView(v,el){
   if(v==='grupo')renderAvalGrupo();
   if(v==='evolucao')renderAvalEvolucao();
   if(v==='registo')renderAvalRegisto();
-}
-function getAvalData(tipo){
-  return DB.avaliacoes.filter(d=>d.tipo===tipo).map(d=>{
-    const vals=d.vals;const pat=avg(vals.slice(0,12)),rem=avg(vals.slice(12,16)),tec=avg(vals.slice(16));
-    return{...d,pat,rem,tec,media:avg(vals)};
-  }).sort((a,b)=>b.media-a.media);
+  if(v==='fichas')renderAvalFichas();
 }
 function renderAvaliacao(){
+  // Update subtitle dynamically based on current user's grupos
   const grupos=currentUser?.grupos||GRUPOS;
-  // Mostrar os escalões reais (subs) em vez do nome do grupo
-  const todosOsSubs=grupos.flatMap(g=>getSubsForGrupo(g));
-  const subLabel=(todosOsSubs.length?todosOsSubs:grupos).join(' + ')||'Todos os escalões';
+  const subLabel=grupos.join(' + ')||'Todos os escalões';
   const subEl=document.getElementById('aval-page-sub');
   if(subEl) subEl.textContent=subLabel+' · Competências individuais';
+  // Selector de ficha activa (acima das tabs)
+  const fichasContainer = document.getElementById('aval-ficha-selector');
+  if(fichasContainer){
+    const fichas = DB.fichas_avaliacao.filter(f=>f.ativo);
+    if(fichas.length > 1){
+      fichasContainer.style.display='flex';
+      fichasContainer.innerHTML=`<span style="font-size:12px;color:var(--gray-500);margin-right:8px;align-self:center">📋 Ficha:</span>`+
+        fichas.map(f=>`<button onclick="setFichaAtiva('${f.id}',this)" class="gtab${fichaAtiva.id===f.id?' active':''}" style="font-size:12px;padding:4px 12px">${f.nome}</button>`).join('');
+    } else {
+      fichasContainer.style.display='none';
+    }
+  }
   renderAvalRanking();
-  const pre=getAvalData('pre'),sel=document.getElementById('aval-sel');
+  const pre=getAvalData('pre',fichaAtiva.id),sel=document.getElementById('aval-sel');
   sel.innerHTML='<option value="">— Escolher jogador —</option>'+pre.map(d=>`<option value="${d.nome}">${d.nome} (${d.media.toFixed(2)})</option>`).join('');
+  // Mostrar/esconder tab de gestão de fichas (só admin e coord)
+  const canManageFichas = currentUser?.key==='coord' || currentUser?.role==='coord';
+  const fichasTab = document.getElementById('aval-tab-fichas');
+  if(fichasTab) fichasTab.style.display = canManageFichas ? '' : 'none';
 }
 function renderAvalRanking(){
-  const data=getAvalData('pre');if(!data.length){document.getElementById('aval-ranking').innerHTML='<div class="empty-state"><div class="empty-state-icon">⭐</div><div class="empty-state-text">Sem avaliações</div></div>';return;}
+  const data=getAvalData('pre',fichaAtiva.id);if(!data.length){document.getElementById('aval-ranking').innerHTML='<div class="empty-state"><div class="empty-state-icon">⭐</div><div class="empty-state-text">Sem avaliações</div></div>';return;}
   const gMedia=avg(data.map(d=>d.media));
+  const gestos=fichaAtiva.gestos;
+  const cats=[...new Set(gestos.map(g=>g.cat))];
+  const colHeaders=cats.map(c=>`<th>${c}</th>`).join('');
   document.getElementById('aval-ranking').innerHTML=`
-    <div class="metrics-grid" style="margin-bottom:16px"><div class="metric-card"><div class="metric-label">Avaliados</div><div class="metric-value">${data.length}</div><div class="metric-sub">pré-teste out/2025</div></div><div class="metric-card"><div class="metric-label">Média grupo</div><div class="metric-value" style="color:${valColor(gMedia)}">${gMedia.toFixed(2)}</div><div class="metric-sub">/ 5.0</div></div><div class="metric-card"><div class="metric-label">Melhor</div><div class="metric-value" style="font-size:14px">${data[0].nome.split(' ')[0]}</div><div class="metric-sub">${data[0].media.toFixed(2)}</div></div><div class="metric-card"><div class="metric-label">Atenção</div><div class="metric-value metric-danger">${data.filter(d=>d.media<2.5).length}</div><div class="metric-sub">média &lt; 2.5</div></div></div>
+    <div class="metrics-grid" style="margin-bottom:16px"><div class="metric-card"><div class="metric-label">Avaliados</div><div class="metric-value">${data.length}</div><div class="metric-sub">${fichaAtiva.nome} · pré-teste</div></div><div class="metric-card"><div class="metric-label">Média grupo</div><div class="metric-value" style="color:${valColor(gMedia)}">${gMedia.toFixed(2)}</div><div class="metric-sub">/ 5.0</div></div><div class="metric-card"><div class="metric-label">Melhor</div><div class="metric-value" style="font-size:14px">${data[0].nome.split(' ')[0]}</div><div class="metric-sub">${data[0].media.toFixed(2)}</div></div><div class="metric-card"><div class="metric-label">Atenção</div><div class="metric-value metric-danger">${data.filter(d=>d.media<2.5).length}</div><div class="metric-sub">média &lt; 2.5</div></div></div>
     <div class="card"><div class="card-title">🏆 Ranking</div>${data.map(d=>`<div class="bar-row"><div class="bar-label">${d.nome.split(' ')[0]}</div><div class="bar-track"><div class="bar-fill" style="width:${d.media/5*100}%;background:${valColor(d.media)}"></div></div><div class="bar-val" style="color:${valColor(d.media)}">${d.media.toFixed(2)}</div></div>`).join('')}</div>
-    <div class="card"><div class="card-title">📋 Tabela</div><table class="tbl"><thead><tr><th>#</th><th>Jogador</th><th>Patinagem</th><th>Remate</th><th>Téc. Bola</th><th>Média</th><th>Nível</th></tr></thead><tbody>${data.map((d,i)=>{const nv=d.media>=4.5?['Elite','badge-gold']:d.media>=3.5?['Avançado','badge-info']:d.media>=2.5?['Intermédio','badge-ok']:d.media>=1.5?['Iniciante','badge-warn']:['Básico','badge-danger'];return`<tr><td>${i+1}</td><td><strong>${d.nome}</strong></td><td>${d.pat.toFixed(1)}</td><td>${d.rem.toFixed(1)}</td><td>${d.tec.toFixed(1)}</td><td><strong style="color:${valColor(d.media)}">${d.media.toFixed(2)}</strong></td><td><span class="badge ${nv[1]}">${nv[0]}</span></td></tr>`;}).join('')}</tbody></table></div>`;
+    <div class="card"><div class="card-title">📋 Tabela</div><table class="tbl"><thead><tr><th>#</th><th>Jogador</th>${colHeaders}<th>Média</th><th>Nível</th></tr></thead><tbody>${data.map((d,i)=>{const nv=d.media>=4.5?['Elite','badge-gold']:d.media>=3.5?['Avançado','badge-info']:d.media>=2.5?['Intermédio','badge-ok']:d.media>=1.5?['Iniciante','badge-warn']:['Básico','badge-danger'];const catCols=cats.map(cat=>`<td>${(d.catAvgs[cat]||0).toFixed(1)}</td>`).join('');return`<tr><td>${i+1}</td><td><strong>${d.nome}</strong></td>${catCols}<td><strong style="color:${valColor(d.media)}">${d.media.toFixed(2)}</strong></td><td><span class="badge ${nv[1]}">${nv[0]}</span></td></tr>`;}).join('')}</tbody></table></div>`;
 }
 function renderAvalIndividual(){
   const nome=document.getElementById('aval-sel').value,div=document.getElementById('aval-ind-content');
   if(!nome){div.innerHTML='';return;}
-  const data=getAvalData('pre'),d=data.find(x=>x.nome===nome);if(!d)return;
-  const forcas=COMPS.filter((_,i)=>d.vals[i]>=4),fraquezas=COMPS.filter((_,i)=>d.vals[i]<=2);
+  const data=getAvalData('pre',fichaAtiva.id),d=data.find(x=>x.nome===nome);if(!d)return;
+  const gestos=d.gestos||fichaAtiva.gestos;
+  const forcas=gestos.filter((_,i)=>d.vals[i]>=4),fraquezas=gestos.filter((_,i)=>d.vals[i]<=2);
   const ini=nome.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
   const jog=DB.jogadores.find(x=>x.nome===nome);
+  const cats=[...new Set(gestos.map(g=>g.cat))];
+  const catCards=cats.map(cat=>`<div class="metric-card"><div class="metric-label">${cat}</div><div class="metric-value" style="color:${valColor(d.catAvgs[cat]||0)}">${(d.catAvgs[cat]||0).toFixed(2)}</div></div>`).join('');
   div.innerHTML=`
-    <div class="card"><div class="ficha-header">${jog&&jog.foto?`<div class="ficha-avatar" style="padding:0;overflow:hidden"><img src="${jog.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>`:`<div class="ficha-avatar">${ini}</div>`}<div style="flex:1"><div style="font-size:15px;font-weight:600">${d.nome}</div><div style="font-size:11px;color:var(--gray-500)">Pré-teste: ${fmtDate(d.data)}</div></div><div style="text-align:right"><div style="font-size:24px;font-weight:700;color:${valColor(d.media)}">${d.media.toFixed(2)}</div><div style="font-size:11px;color:var(--gray-500)">/ 5.0</div></div></div><div class="metrics-grid"><div class="metric-card"><div class="metric-label">Patinagem</div><div class="metric-value" style="color:${valColor(d.pat)}">${d.pat.toFixed(2)}</div></div><div class="metric-card"><div class="metric-label">Remate</div><div class="metric-value" style="color:${valColor(d.rem)}">${d.rem.toFixed(2)}</div></div><div class="metric-card"><div class="metric-label">Técnica bola</div><div class="metric-value" style="color:${valColor(d.tec)}">${d.tec.toFixed(2)}</div></div></div></div>
-    <div class="card"><div class="card-title">📊 Detalhe</div>${COMPS.map((c,i)=>`<div class="bar-row"><div class="bar-label">${c.label}</div><div class="bar-track"><div class="bar-fill" style="width:${d.vals[i]/5*100}%;background:${valColor(d.vals[i])}"></div></div><div class="bar-val" style="color:${valColor(d.vals[i])}">${d.vals[i]}</div></div>`).join('')}</div>
-    <div class="card"><div class="card-title">🎯 Análise SWOT</div><div class="swot-grid"><div class="swot-box" style="background:#F0FDF4"><div class="swot-title" style="color:#166534">S — Forças (≥ 4)</div>${forcas.length?forcas.map(c=>`<div class="swot-item" style="color:#166534"><span>${c.label}</span><span class="badge badge-ok">${d.vals[COMPS.indexOf(c)]}</span></div>`).join(''):'<div style="font-size:11px;color:#6B7280">Nenhuma ≥ 4</div>'}</div><div class="swot-box" style="background:#FEF2F2"><div class="swot-title" style="color:#991B1B">W — Fraquezas (≤ 2)</div>${fraquezas.length?fraquezas.map(c=>`<div class="swot-item" style="color:#991B1B"><span>${c.label}</span><span class="badge badge-danger">${d.vals[COMPS.indexOf(c)]}</span></div>`).join(''):'<div style="font-size:11px;color:#059669">Sem fraquezas</div>'}</div><div class="swot-box" style="background:#EFF6FF"><div class="swot-title" style="color:#1E40AF">O — Oportunidades</div><div style="font-size:11px;color:#1E40AF;line-height:1.6">${forcas.length>=3?'Base técnica sólida para progressão rápida.':fraquezas.length>=8?'Grande margem de melhoria com trabalho individualizado.':'Evolução consistente com foco nas fraquezas.'} ${d.pat>d.rem?'Capitalizar na patinagem para melhor posicionamento.':''}</div></div><div class="swot-box" style="background:#FFFBEB"><div class="swot-title" style="color:#92400E">T — Ameaças</div><div style="font-size:11px;color:#92400E;line-height:1.6">${fraquezas.filter(c=>c.cat==='Patinagem').length>=4?'Lacunas na patinagem limitam o desenvolvimento global. ':''}${d.vals[12]<=2&&d.vals[13]<=2?'Remate fraco em ambos os pés. ':''}${fraquezas.length>=10?'Muitas fraquezas simultâneas.':'Manter regularidade de presença.'}</div></div></div></div>`;
+    <div class="card"><div class="ficha-header">${jog&&jog.foto?`<div class="ficha-avatar" style="padding:0;overflow:hidden"><img src="${jog.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>`:`<div class="ficha-avatar">${ini}</div>`}<div style="flex:1"><div style="font-size:15px;font-weight:600">${d.nome}</div><div style="font-size:11px;color:var(--gray-500)">Pré-teste: ${fmtDate(d.data)} · ${fichaAtiva.nome}</div></div><div style="text-align:right"><div style="font-size:24px;font-weight:700;color:${valColor(d.media)}">${d.media.toFixed(2)}</div><div style="font-size:11px;color:var(--gray-500)">/ 5.0</div></div></div><div class="metrics-grid">${catCards}</div></div>
+    <div class="card"><div class="card-title">📊 Detalhe</div>${gestos.map((c,i)=>`<div class="bar-row"><div class="bar-label">${c.label}</div><div class="bar-track"><div class="bar-fill" style="width:${d.vals[i]/5*100}%;background:${valColor(d.vals[i])}"></div></div><div class="bar-val" style="color:${valColor(d.vals[i])}">${d.vals[i]}</div></div>`).join('')}</div>
+    <div class="card"><div class="card-title">🎯 Análise SWOT</div><div class="swot-grid"><div class="swot-box" style="background:#F0FDF4"><div class="swot-title" style="color:#166534">S — Forças (≥ 4)</div>${forcas.length?forcas.map(c=>`<div class="swot-item" style="color:#166534"><span>${c.label}</span><span class="badge badge-ok">${d.vals[gestos.indexOf(c)]}</span></div>`).join(''):'<div style="font-size:11px;color:#6B7280">Nenhuma ≥ 4</div>'}</div><div class="swot-box" style="background:#FEF2F2"><div class="swot-title" style="color:#991B1B">W — Fraquezas (≤ 2)</div>${fraquezas.length?fraquezas.map(c=>`<div class="swot-item" style="color:#991B1B"><span>${c.label}</span><span class="badge badge-danger">${d.vals[gestos.indexOf(c)]}</span></div>`).join(''):'<div style="font-size:11px;color:#059669">Sem fraquezas</div>'}</div><div class="swot-box" style="background:#EFF6FF"><div class="swot-title" style="color:#1E40AF">O — Oportunidades</div><div style="font-size:11px;color:#1E40AF;line-height:1.6">${forcas.length>=3?'Base técnica sólida para progressão rápida.':fraquezas.length>=8?'Grande margem de melhoria com trabalho individualizado.':'Evolução consistente com foco nas fraquezas.'}</div></div><div class="swot-box" style="background:#FFFBEB"><div class="swot-title" style="color:#92400E">T — Ameaças</div><div style="font-size:11px;color:#92400E;line-height:1.6">${fraquezas.length>=10?'Muitas fraquezas simultâneas.':'Manter regularidade de presença.'}</div></div></div></div>`;
 }
 function renderAvalRegisto(){
   // Mostrar jogadores do grupo do treinador logado (ou todos se coord)
   const grupos=currentUser?.grupos||GRUPOS;
   const subsPermitidos=grupos.flatMap(g=>getSubsForGrupo(g));
   const jogs=DB.jogadores.filter(j=>subsPermitidos.includes(j.sub)).sort((a,b)=>a.nome.localeCompare(b.nome));
-  const pre=DB.avaliacoes.filter(d=>d.tipo==='pre');
-  const pos=DB.avaliacoes.filter(d=>d.tipo==='pos');
+  const pre=DB.avaliacoes.filter(d=>d.tipo==='pre'&&(d.ficha_id||FICHA_LEGACY_ID)===fichaAtiva.id);
+  const pos=DB.avaliacoes.filter(d=>d.tipo==='pos'&&(d.ficha_id||FICHA_LEGACY_ID)===fichaAtiva.id);
   const div=document.getElementById('aval-registo');
   div.innerHTML=`
+    <div class="alert alert-info" style="margin-bottom:12px;padding:8px 12px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;font-size:12px;color:#1E40AF">
+      📋 Ficha activa: <strong>${fichaAtiva.nome}</strong> — ${fichaAtiva.gestos.length} gestos
+    </div>
     <div class="card">
       <div class="card-title">✏️ Registar Avaliação</div>
-      <div style="font-size:12px;color:var(--gray-500);margin-bottom:14px">Preenche as 19 competências (1=Fraco → 5=Excelente)</div>
+      <div style="font-size:12px;color:var(--gray-500);margin-bottom:14px">Preenche os ${fichaAtiva.gestos.length} gestos (1=Fraco → 5=Excelente)</div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
         <div class="form-group" style="margin-bottom:0">
           <label class="form-label">Jogador</label>
@@ -2146,7 +2240,7 @@ function renderAvalRegisto(){
       <div id="reg-form-content"></div>
     </div>
     <div class="card" style="margin-top:12px">
-      <div class="card-title">📊 Estado das avaliações</div>
+      <div class="card-title">📊 Estado das avaliações — ${fichaAtiva.nome}</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px">
         ${jogs.map(j=>{
           const hasPre=pre.find(d=>d.nome===j.nome);
@@ -2172,19 +2266,21 @@ function renderRegForm(){
   const tipo=tipoSel?tipoSel.value:'pos';
   const div=document.getElementById('reg-form-content');
   if(!nome){div.innerHTML='';return;}
-  const pre=DB.avaliacoes.find(d=>d.tipo==='pre'&&d.nome===nome);
-  const pos=DB.avaliacoes.find(d=>d.tipo==='pos'&&d.nome===nome);
+  const gestos=fichaAtiva.gestos;
+  const fichaId=fichaAtiva.id;
+  const pre=DB.avaliacoes.find(d=>d.tipo==='pre'&&d.nome===nome&&(d.ficha_id||FICHA_LEGACY_ID)===fichaId);
+  const pos=DB.avaliacoes.find(d=>d.tipo==='pos'&&d.nome===nome&&(d.ficha_id||FICHA_LEGACY_ID)===fichaId);
   const existing=tipo==='pre'?pre:pos;
-  const reference=tipo==='pos'?pre:null; // show pre as reference when doing pos
-  const vals=existing?[...existing.vals]:(reference?[...reference.vals]:new Array(19).fill(3));
-  const cats=[...new Set(COMPS.map(c=>c.cat))];
+  const reference=tipo==='pos'?pre:null;
+  const vals=existing?[...existing.vals]:(reference?[...reference.vals]:new Array(gestos.length).fill(3));
+  const cats=[...new Set(gestos.map(c=>c.cat))];
   const tipoLabel=tipo==='pre'?'Pré-teste':'Pós-teste';
   div.innerHTML=cats.map(cat=>{
-    const comps=COMPS.filter(c=>c.cat===cat);
+    const comps=gestos.filter(c=>c.cat===cat);
     return`<div style="margin-bottom:16px">
       <div style="font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:8px">${cat}</div>
       ${comps.map(c=>{
-        const i=COMPS.indexOf(c);
+        const i=gestos.indexOf(c);
         const v=vals[i]||3;
         const refVal=reference?reference.vals[i]:null;
         return`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--gray-100)">
@@ -2201,6 +2297,8 @@ function renderRegForm(){
   </div>`;
   window._regVals=vals;
   window._regTipo=tipo;
+  window._regFichaId=fichaId;
+  window._regGestosLen=gestos.length;
 }
 function setRegVal(idx,val){
   if(!window._regVals)return;
@@ -2215,11 +2313,13 @@ function setRegVal(idx,val){
   });
 }
 async function saveAvaliacao(nome,tipo){
-  if(!window._regVals||window._regVals.length!==19){alert('Preenche todas as competências!');return;}
+  const fichaId=window._regFichaId||FICHA_LEGACY_ID;
+  const nGestos=window._regGestosLen||19;
+  if(!window._regVals||window._regVals.length!==nGestos){alert('Preenche todas as competências!');return;}
   const jog=DB.jogadores.find(j=>j.nome===nome);if(!jog)return;
   showLoading(true);
-  const existing=DB.avaliacoes.find(d=>d.tipo===tipo&&d.nome===nome);
-  const record={nome,tipo,epoca:DB.config.epoca||'2025/2026',data:new Date().toISOString().split('T')[0],vals:[...window._regVals]};
+  const existing=DB.avaliacoes.find(d=>d.tipo===tipo&&d.nome===nome&&(d.ficha_id||FICHA_LEGACY_ID)===fichaId);
+  const record={nome,tipo,ficha_id:fichaId,epoca:DB.config.epoca||'2025/2026',data:new Date().toISOString().split('T')[0],vals:[...window._regVals]};
   if(existing){
     await sb.from('avaliacoes').update(record).eq('id',existing.id);
     const idx=DB.avaliacoes.indexOf(existing);
@@ -2238,7 +2338,8 @@ async function saveAvaliacao(nome,tipo){
 async function deleteAval(nome,tipo){
   const label=tipo==='pre'?'Pré-teste':'Pós-teste';
   if(!confirm('Apagar '+label+' de '+nome+'?'))return;
-  const existing=DB.avaliacoes.find(d=>d.tipo===tipo&&d.nome===nome);
+  const fichaId=fichaAtiva.id;
+  const existing=DB.avaliacoes.find(d=>d.tipo===tipo&&d.nome===nome&&(d.ficha_id||FICHA_LEGACY_ID)===fichaId);
   if(!existing)return;
   showLoading(true);
   await sb.from('avaliacoes').delete().eq('id',existing.id);
@@ -2255,15 +2356,388 @@ function editAval(nome,tipo){
   renderRegForm();
   document.getElementById('aval-registo').scrollIntoView({behavior:'smooth'});
 }
+function setFichaAtiva(fichaId, el){
+  const f = DB.fichas_avaliacao.find(x=>x.id===fichaId);
+  if(!f) return;
+  fichaAtiva = f;
+  // update selector buttons
+  document.querySelectorAll('#aval-ficha-selector .gtab').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  // re-render current view
+  renderAvalRanking();
+  const pre=getAvalData('pre',fichaAtiva.id),sel=document.getElementById('aval-sel');
+  if(sel) sel.innerHTML='<option value="">— Escolher jogador —</option>'+pre.map(d=>`<option value="${d.nome}">${d.nome} (${d.media.toFixed(2)})</option>`).join('');
+  toast('📋 Ficha: '+f.nome);
+}
+
+// ─── CRUD FICHAS DE AVALIAÇÃO ───────────────────────────────────────────────
+// Apenas Admin (key=coord) e Coord Técnico (role=coord) têm acesso
+function canManageFichas(){
+  return currentUser?.key==='coord' || currentUser?.role==='coord';
+}
+function renderAvalFichas(){
+  if(!canManageFichas()){
+    document.getElementById('aval-fichas').innerHTML='<div class="alert" style="background:#FEF2F2;color:#991B1B;border-color:#FECACA">⛔ Sem permissão para gerir fichas de avaliação.</div>';
+    return;
+  }
+  const div = document.getElementById('aval-fichas');
+  div.innerHTML=`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="card-title" style="margin-bottom:0">📋 Fichas de Avaliação</div>
+        <button class="btn btn-primary" onclick="openModalFicha(null)" style="font-size:13px">+ Nova Ficha</button>
+      </div>
+      <div style="font-size:12px;color:var(--gray-500);margin-bottom:16px">
+        A ficha <strong>Iniciação</strong> é a ficha original com 19 gestos e não pode ser apagada — os registos existentes estão protegidos.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${DB.fichas_avaliacao.map(f=>{
+          const nAvals = DB.avaliacoes.filter(a=>(a.ficha_id||FICHA_LEGACY_ID)===f.id).length;
+          const isLegacy = f.id===FICHA_LEGACY_ID;
+          return`<div style="background:${f.ativo?'#F0FDF4':'#F9FAFB'};border:1px solid ${f.ativo?'#86EFAC':'#E5E7EB'};border-radius:10px;padding:12px 14px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div>
+                <div style="font-weight:600;font-size:14px;margin-bottom:2px">${f.nome} ${f.ativo?'<span style="font-size:10px;background:#D1FAE5;color:#065F46;padding:1px 7px;border-radius:10px;margin-left:4px">activa</span>':''}</div>
+                <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px">${f.descricao||''}</div>
+                <div style="font-size:11px;color:var(--gray-400)">${f.gestos.length} gestos · ${nAvals} avaliações registadas</div>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                ${!isLegacy?`<button onclick="toggleFichaAtivo('${f.id}')" class="btn" style="font-size:11px;padding:4px 10px">${f.ativo?'Desactivar':'Activar'}</button>`:''}
+                ${!isLegacy?`<button onclick="openModalFicha('${f.id}')" class="btn" style="font-size:11px;padding:4px 10px">✏️ Editar</button>`:''}
+                ${!isLegacy&&nAvals===0?`<button onclick="deleteFicha('${f.id}')" class="btn" style="font-size:11px;padding:4px 10px;background:#FEF2F2;color:#991B1B;border-color:#FECACA">🗑️</button>`:''}
+              </div>
+            </div>
+            <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px">
+              ${f.gestos.map(g=>`<span style="font-size:10px;background:var(--gray-100);color:var(--gray-600);padding:2px 7px;border-radius:10px">${g.label}</span>`).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <!-- Modal criar/editar ficha -->
+    <div id="modal-ficha" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;overflow-y:auto">
+      <div style="background:white;border-radius:12px;max-width:680px;margin:40px auto;padding:24px;position:relative">
+        <button onclick="closeModalFicha()" style="position:absolute;top:12px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray-400)">✕</button>
+        <div id="modal-ficha-content"></div>
+      </div>
+    </div>`;
+}
+function openModalFicha(fichaId){
+  const ficha = fichaId ? DB.fichas_avaliacao.find(f=>f.id===fichaId) : null;
+  const gestos = ficha ? JSON.parse(JSON.stringify(ficha.gestos)) : [{key:'g1',label:'',cat:'Categoria 1'}];
+  window._modalFichaId = fichaId;
+  window._modalGestos = gestos;
+  renderModalFichaContent();
+  document.getElementById('modal-ficha').style.display='block';
+}
+function closeModalFicha(){
+  document.getElementById('modal-ficha').style.display='none';
+  window._modalGestos=null;
+  window._modalFichaId=null;
+}
+function renderModalFichaContent(){
+  const ficha = window._modalFichaId ? DB.fichas_avaliacao.find(f=>f.id===window._modalFichaId) : null;
+  const gestos = window._modalGestos||[];
+  const cats = [...new Set(gestos.map(g=>g.cat))];
+  document.getElementById('modal-ficha-content').innerHTML=`
+    <h3 style="margin:0 0 16px;font-size:16px">${ficha?'✏️ Editar Ficha':'+ Nova Ficha de Avaliação'}</h3>
+    <div class="form-group"><label class="form-label">Nome da Ficha *</label>
+      <input id="ficha-nome-inp" class="form-input" value="${ficha?ficha.nome:''}" placeholder="ex: Aperfeiçoamento" style="max-width:320px"></div>
+    <div class="form-group"><label class="form-label">Descrição</label>
+      <input id="ficha-desc-inp" class="form-input" value="${ficha?ficha.descricao||'':''}" placeholder="Breve descrição do nível/objectivo" style="max-width:480px"></div>
+    <div style="margin-top:18px;margin-bottom:10px;font-weight:600;font-size:13px">Gestos (${gestos.length})</div>
+    <div id="modal-gestos-list" style="display:flex;flex-direction:column;gap:6px">
+      ${gestos.map((g,i)=>renderGestoRow(g,i)).join('')}
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <button class="btn" onclick="addGesto()" style="font-size:12px">+ Adicionar gesto</button>
+    </div>
+    <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn" onclick="closeModalFicha()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveFicha()">💾 Guardar</button>
+    </div>`;
+}
+function renderGestoRow(g,i){
+  return`<div id="gesto-row-${i}" style="display:flex;gap:8px;align-items:center;background:var(--gray-50);border-radius:8px;padding:7px 10px">
+    <input class="form-input" style="flex:2;font-size:12px;padding:5px 8px" placeholder="Nome do gesto" value="${g.label}" oninput="updateGesto(${i},'label',this.value)">
+    <input class="form-input" style="flex:1;font-size:12px;padding:5px 8px" placeholder="Categoria" value="${g.cat}" oninput="updateGesto(${i},'cat',this.value)" list="cats-datalist">
+    <button onclick="removeGesto(${i})" style="background:none;border:none;font-size:16px;cursor:pointer;color:#DC2626;flex-shrink:0">✕</button>
+  </div>
+  <datalist id="cats-datalist">${[...new Set((window._modalGestos||[]).map(x=>x.cat))].map(c=>`<option value="${c}">`).join('')}</datalist>`;
+}
+function addGesto(){
+  const cats = [...new Set((window._modalGestos||[]).map(g=>g.cat))];
+  const cat = cats[cats.length-1]||'Categoria';
+  window._modalGestos.push({key:'g'+(Date.now()),label:'',cat});
+  document.getElementById('modal-gestos-list').innerHTML=window._modalGestos.map((g,i)=>renderGestoRow(g,i)).join('');
+}
+function removeGesto(i){
+  window._modalGestos.splice(i,1);
+  document.getElementById('modal-gestos-list').innerHTML=window._modalGestos.map((g,idx)=>renderGestoRow(g,idx)).join('');
+}
+function updateGesto(i,field,val){
+  if(window._modalGestos&&window._modalGestos[i]) window._modalGestos[i][field]=val;
+}
+async function saveFicha(){
+  if(!canManageFichas()) return;
+  const nome = document.getElementById('ficha-nome-inp').value.trim();
+  const desc = document.getElementById('ficha-desc-inp').value.trim();
+  if(!nome){alert('Insere um nome para a ficha');return;}
+  const gestos = (window._modalGestos||[]).map(g=>({
+    key: g.key||('g_'+Math.random().toString(36).slice(2,6)),
+    label: g.label.trim(),
+    cat: g.cat.trim()||'Geral'
+  })).filter(g=>g.label);
+  if(gestos.length<1){alert('Adiciona pelo menos 1 gesto');return;}
+  showLoading(true);
+  const fichaId = window._modalFichaId;
+  if(fichaId){
+    // Editar
+    const existing = DB.fichas_avaliacao.find(f=>f.id===fichaId);
+    const updated = {...existing, nome, descricao:desc, gestos};
+    await sb.from('fichas_avaliacao').update({nome,descricao:desc,gestos}).eq('id',fichaId);
+    const idx = DB.fichas_avaliacao.indexOf(existing);
+    DB.fichas_avaliacao[idx]=updated;
+    if(fichaAtiva.id===fichaId) fichaAtiva=updated;
+  } else {
+    // Criar
+    const newFicha = {id:uid(), nome, descricao:desc, ativo:true, ordem:DB.fichas_avaliacao.length, gestos};
+    await sb.from('fichas_avaliacao').insert(newFicha);
+    DB.fichas_avaliacao.push(newFicha);
+  }
+  showLoading(false);
+  closeModalFicha();
+  renderAvalFichas();
+  toast('✅ Ficha guardada!');
+}
+async function toggleFichaAtivo(fichaId){
+  if(!canManageFichas()) return;
+  const ficha = DB.fichas_avaliacao.find(f=>f.id===fichaId);
+  if(!ficha) return;
+  showLoading(true);
+  const novoEstado = !ficha.ativo;
+  await sb.from('fichas_avaliacao').update({ativo:novoEstado}).eq('id',fichaId);
+  ficha.ativo = novoEstado;
+  if(!novoEstado && fichaAtiva.id===fichaId){
+    fichaAtiva = FICHA_LEGACY; // fallback para legado se desactivar a activa
+  }
+  showLoading(false);
+  renderAvalFichas();
+  renderAvaliacao();
+  toast(novoEstado?'✅ Ficha activada':'⚪ Ficha desactivada');
+}
+async function deleteFicha(fichaId){
+  if(!canManageFichas()) return;
+  const ficha = DB.fichas_avaliacao.find(f=>f.id===fichaId);
+  if(!ficha||fichaId===FICHA_LEGACY_ID) return;
+  const nAvals = DB.avaliacoes.filter(a=>(a.ficha_id||FICHA_LEGACY_ID)===fichaId).length;
+  if(nAvals>0){alert('Não é possível apagar: existem '+nAvals+' avaliações com esta ficha.');return;}
+  if(!confirm('Apagar ficha "'+ficha.nome+'"?')) return;
+  showLoading(true);
+  await sb.from('fichas_avaliacao').delete().eq('id',fichaId);
+  DB.fichas_avaliacao = DB.fichas_avaliacao.filter(f=>f.id!==fichaId);
+  if(fichaAtiva.id===fichaId) fichaAtiva=FICHA_LEGACY;
+  showLoading(false);
+  renderAvalFichas();
+  toast('🗑️ Ficha apagada');
+}
+// ─── FIM CRUD FICHAS ─────────────────────────────────────────────────────────
+function setFichaAtiva(fichaId, el){
+  const f = DB.fichas_avaliacao.find(x=>x.id===fichaId);
+  if(!f) return;
+  fichaAtiva = f;
+  // update selector buttons
+  document.querySelectorAll('#aval-ficha-selector .gtab').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  // re-render current view
+  renderAvalRanking();
+  const pre=getAvalData('pre',fichaAtiva.id),sel=document.getElementById('aval-sel');
+  if(sel) sel.innerHTML='<option value="">— Escolher jogador —</option>'+pre.map(d=>`<option value="${d.nome}">${d.nome} (${d.media.toFixed(2)})</option>`).join('');
+  toast('📋 Ficha: '+f.nome);
+}
+
+// ─── CRUD FICHAS DE AVALIAÇÃO ───────────────────────────────────────────────
+// Apenas Admin (key=coord) e Coord Técnico (role=coord) têm acesso
+function canManageFichas(){
+  return currentUser?.key==='coord' || currentUser?.role==='coord';
+}
+function renderAvalFichas(){
+  if(!canManageFichas()){
+    document.getElementById('aval-fichas').innerHTML='<div class="alert" style="background:#FEF2F2;color:#991B1B;border-color:#FECACA">⛔ Sem permissão para gerir fichas de avaliação.</div>';
+    return;
+  }
+  const div = document.getElementById('aval-fichas');
+  div.innerHTML=`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="card-title" style="margin-bottom:0">📋 Fichas de Avaliação</div>
+        <button class="btn btn-primary" onclick="openModalFicha(null)" style="font-size:13px">+ Nova Ficha</button>
+      </div>
+      <div style="font-size:12px;color:var(--gray-500);margin-bottom:16px">
+        A ficha <strong>Iniciação</strong> é a ficha original com 19 gestos e não pode ser apagada — os registos existentes estão protegidos.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${DB.fichas_avaliacao.map(f=>{
+          const nAvals = DB.avaliacoes.filter(a=>(a.ficha_id||FICHA_LEGACY_ID)===f.id).length;
+          const isLegacy = f.id===FICHA_LEGACY_ID;
+          return`<div style="background:${f.ativo?'#F0FDF4':'#F9FAFB'};border:1px solid ${f.ativo?'#86EFAC':'#E5E7EB'};border-radius:10px;padding:12px 14px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div>
+                <div style="font-weight:600;font-size:14px;margin-bottom:2px">${f.nome} ${f.ativo?'<span style="font-size:10px;background:#D1FAE5;color:#065F46;padding:1px 7px;border-radius:10px;margin-left:4px">activa</span>':''}</div>
+                <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px">${f.descricao||''}</div>
+                <div style="font-size:11px;color:var(--gray-400)">${f.gestos.length} gestos · ${nAvals} avaliações registadas</div>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                ${!isLegacy?`<button onclick="toggleFichaAtivo('${f.id}')" class="btn" style="font-size:11px;padding:4px 10px">${f.ativo?'Desactivar':'Activar'}</button>`:''}
+                ${!isLegacy?`<button onclick="openModalFicha('${f.id}')" class="btn" style="font-size:11px;padding:4px 10px">✏️ Editar</button>`:''}
+                ${!isLegacy&&nAvals===0?`<button onclick="deleteFicha('${f.id}')" class="btn" style="font-size:11px;padding:4px 10px;background:#FEF2F2;color:#991B1B;border-color:#FECACA">🗑️</button>`:''}
+              </div>
+            </div>
+            <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px">
+              ${f.gestos.map(g=>`<span style="font-size:10px;background:var(--gray-100);color:var(--gray-600);padding:2px 7px;border-radius:10px">${g.label}</span>`).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <!-- Modal criar/editar ficha -->
+    <div id="modal-ficha" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;overflow-y:auto">
+      <div style="background:white;border-radius:12px;max-width:680px;margin:40px auto;padding:24px;position:relative">
+        <button onclick="closeModalFicha()" style="position:absolute;top:12px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray-400)">✕</button>
+        <div id="modal-ficha-content"></div>
+      </div>
+    </div>`;
+}
+function openModalFicha(fichaId){
+  const ficha = fichaId ? DB.fichas_avaliacao.find(f=>f.id===fichaId) : null;
+  const gestos = ficha ? JSON.parse(JSON.stringify(ficha.gestos)) : [{key:'g1',label:'',cat:'Categoria 1'}];
+  window._modalFichaId = fichaId;
+  window._modalGestos = gestos;
+  renderModalFichaContent();
+  document.getElementById('modal-ficha').style.display='block';
+}
+function closeModalFicha(){
+  document.getElementById('modal-ficha').style.display='none';
+  window._modalGestos=null;
+  window._modalFichaId=null;
+}
+function renderModalFichaContent(){
+  const ficha = window._modalFichaId ? DB.fichas_avaliacao.find(f=>f.id===window._modalFichaId) : null;
+  const gestos = window._modalGestos||[];
+  const cats = [...new Set(gestos.map(g=>g.cat))];
+  document.getElementById('modal-ficha-content').innerHTML=`
+    <h3 style="margin:0 0 16px;font-size:16px">${ficha?'✏️ Editar Ficha':'+ Nova Ficha de Avaliação'}</h3>
+    <div class="form-group"><label class="form-label">Nome da Ficha *</label>
+      <input id="ficha-nome-inp" class="form-input" value="${ficha?ficha.nome:''}" placeholder="ex: Aperfeiçoamento" style="max-width:320px"></div>
+    <div class="form-group"><label class="form-label">Descrição</label>
+      <input id="ficha-desc-inp" class="form-input" value="${ficha?ficha.descricao||'':''}" placeholder="Breve descrição do nível/objectivo" style="max-width:480px"></div>
+    <div style="margin-top:18px;margin-bottom:10px;font-weight:600;font-size:13px">Gestos (${gestos.length})</div>
+    <div id="modal-gestos-list" style="display:flex;flex-direction:column;gap:6px">
+      ${gestos.map((g,i)=>renderGestoRow(g,i)).join('')}
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <button class="btn" onclick="addGesto()" style="font-size:12px">+ Adicionar gesto</button>
+    </div>
+    <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn" onclick="closeModalFicha()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveFicha()">💾 Guardar</button>
+    </div>`;
+}
+function renderGestoRow(g,i){
+  return`<div id="gesto-row-${i}" style="display:flex;gap:8px;align-items:center;background:var(--gray-50);border-radius:8px;padding:7px 10px">
+    <input class="form-input" style="flex:2;font-size:12px;padding:5px 8px" placeholder="Nome do gesto" value="${g.label}" oninput="updateGesto(${i},'label',this.value)">
+    <input class="form-input" style="flex:1;font-size:12px;padding:5px 8px" placeholder="Categoria" value="${g.cat}" oninput="updateGesto(${i},'cat',this.value)" list="cats-datalist">
+    <button onclick="removeGesto(${i})" style="background:none;border:none;font-size:16px;cursor:pointer;color:#DC2626;flex-shrink:0">✕</button>
+  </div>
+  <datalist id="cats-datalist">${[...new Set((window._modalGestos||[]).map(x=>x.cat))].map(c=>`<option value="${c}">`).join('')}</datalist>`;
+}
+function addGesto(){
+  const cats = [...new Set((window._modalGestos||[]).map(g=>g.cat))];
+  const cat = cats[cats.length-1]||'Categoria';
+  window._modalGestos.push({key:'g'+(Date.now()),label:'',cat});
+  document.getElementById('modal-gestos-list').innerHTML=window._modalGestos.map((g,i)=>renderGestoRow(g,i)).join('');
+}
+function removeGesto(i){
+  window._modalGestos.splice(i,1);
+  document.getElementById('modal-gestos-list').innerHTML=window._modalGestos.map((g,idx)=>renderGestoRow(g,idx)).join('');
+}
+function updateGesto(i,field,val){
+  if(window._modalGestos&&window._modalGestos[i]) window._modalGestos[i][field]=val;
+}
+async function saveFicha(){
+  if(!canManageFichas()) return;
+  const nome = document.getElementById('ficha-nome-inp').value.trim();
+  const desc = document.getElementById('ficha-desc-inp').value.trim();
+  if(!nome){alert('Insere um nome para a ficha');return;}
+  const gestos = (window._modalGestos||[]).map(g=>({
+    key: g.key||('g_'+Math.random().toString(36).slice(2,6)),
+    label: g.label.trim(),
+    cat: g.cat.trim()||'Geral'
+  })).filter(g=>g.label);
+  if(gestos.length<1){alert('Adiciona pelo menos 1 gesto');return;}
+  showLoading(true);
+  const fichaId = window._modalFichaId;
+  if(fichaId){
+    // Editar
+    const existing = DB.fichas_avaliacao.find(f=>f.id===fichaId);
+    const updated = {...existing, nome, descricao:desc, gestos};
+    await sb.from('fichas_avaliacao').update({nome,descricao:desc,gestos}).eq('id',fichaId);
+    const idx = DB.fichas_avaliacao.indexOf(existing);
+    DB.fichas_avaliacao[idx]=updated;
+    if(fichaAtiva.id===fichaId) fichaAtiva=updated;
+  } else {
+    // Criar
+    const newFicha = {id:uid(), nome, descricao:desc, ativo:true, ordem:DB.fichas_avaliacao.length, gestos};
+    await sb.from('fichas_avaliacao').insert(newFicha);
+    DB.fichas_avaliacao.push(newFicha);
+  }
+  showLoading(false);
+  closeModalFicha();
+  renderAvalFichas();
+  toast('✅ Ficha guardada!');
+}
+async function toggleFichaAtivo(fichaId){
+  if(!canManageFichas()) return;
+  const ficha = DB.fichas_avaliacao.find(f=>f.id===fichaId);
+  if(!ficha) return;
+  showLoading(true);
+  const novoEstado = !ficha.ativo;
+  await sb.from('fichas_avaliacao').update({ativo:novoEstado}).eq('id',fichaId);
+  ficha.ativo = novoEstado;
+  if(!novoEstado && fichaAtiva.id===fichaId){
+    fichaAtiva = FICHA_LEGACY; // fallback para legado se desactivar a activa
+  }
+  showLoading(false);
+  renderAvalFichas();
+  renderAvaliacao();
+  toast(novoEstado?'✅ Ficha activada':'⚪ Ficha desactivada');
+}
+async function deleteFicha(fichaId){
+  if(!canManageFichas()) return;
+  const ficha = DB.fichas_avaliacao.find(f=>f.id===fichaId);
+  if(!ficha||fichaId===FICHA_LEGACY_ID) return;
+  const nAvals = DB.avaliacoes.filter(a=>(a.ficha_id||FICHA_LEGACY_ID)===fichaId).length;
+  if(nAvals>0){alert('Não é possível apagar: existem '+nAvals+' avaliações com esta ficha.');return;}
+  if(!confirm('Apagar ficha "'+ficha.nome+'"?')) return;
+  showLoading(true);
+  await sb.from('fichas_avaliacao').delete().eq('id',fichaId);
+  DB.fichas_avaliacao = DB.fichas_avaliacao.filter(f=>f.id!==fichaId);
+  if(fichaAtiva.id===fichaId) fichaAtiva=FICHA_LEGACY;
+  showLoading(false);
+  renderAvalFichas();
+  toast('🗑️ Ficha apagada');
+}
+// ─── FIM CRUD FICHAS ─────────────────────────────────────────────────────────
 function renderAvalGrupo(){
-  const data=getAvalData('pre');
-  const medComp=COMPS.map((c,i)=>({...c,med:avg(data.map(d=>d.vals[i]))})).sort((a,b)=>b.med-a.med);
+  const data=getAvalData('pre',fichaAtiva.id);
+  const gestos=fichaAtiva.gestos;
+  const medComp=gestos.map((c,i)=>({...c,med:avg(data.map(d=>d.vals[i]||0))})).sort((a,b)=>b.med-a.med);
   const atencao=medComp.filter(c=>c.med<2.5);
-  document.getElementById('aval-grupo').innerHTML=`<div class="card"><div class="card-title">📊 Média por competência</div>${medComp.map(c=>`<div class="bar-row"><div class="bar-label">${c.label}</div><div class="bar-track"><div class="bar-fill" style="width:${c.med/5*100}%;background:${valColor(c.med)}"></div></div><div class="bar-val" style="color:${valColor(c.med)}">${c.med.toFixed(1)}</div></div>`).join('')}</div><div class="card"><div class="card-title">⚠️ Prioridade de trabalho (média &lt; 2.5)</div>${atencao.length?atencao.map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--gray-100);font-size:12px"><span><span class="badge badge-warn" style="margin-right:8px">${c.cat}</span>${c.label}</span><strong style="color:#DC2626">${c.med.toFixed(2)}</strong></div>`).join(''):'<div class="alert alert-ok">Todas acima de 2.5</div>'}</div>`;
+  document.getElementById('aval-grupo').innerHTML=`<div class="card"><div class="card-title">📊 Média por gesto — ${fichaAtiva.nome}</div>${medComp.map(c=>`<div class="bar-row"><div class="bar-label">${c.label}</div><div class="bar-track"><div class="bar-fill" style="width:${c.med/5*100}%;background:${valColor(c.med)}"></div></div><div class="bar-val" style="color:${valColor(c.med)}">${c.med.toFixed(1)}</div></div>`).join('')}</div><div class="card"><div class="card-title">⚠️ Prioridade de trabalho (média &lt; 2.5)</div>${atencao.length?atencao.map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--gray-100);font-size:12px"><span><span class="badge badge-warn" style="margin-right:8px">${c.cat}</span>${c.label}</span><strong style="color:#DC2626">${c.med.toFixed(2)}</strong></div>`).join(''):'<div class="alert alert-ok">Todas acima de 2.5</div>'}</div>`;
 }
 function renderAvalEvolucao(){
-  const pre=getAvalData('pre'),pos=getAvalData('pos');
-  document.getElementById('aval-evolucao').innerHTML=`<div class="card">${pos.length===0?'<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">Pós-teste ainda não realizado.<br>Quando fizeres a segunda avaliação, a evolução aparece aqui.</div></div>':''}</div><div class="card"><div class="card-title">📈 Pré vs Pós-teste</div><table class="tbl"><thead><tr><th>Jogador</th><th>Pré-teste</th><th>Pós-teste</th><th>Evolução</th></tr></thead><tbody>${pre.map(d=>{const p2=pos.find(x=>x.nome===d.nome),evo=p2?(p2.media-d.media).toFixed(2):null;return`<tr><td>${d.nome}</td><td><strong style="color:${valColor(d.media)}">${d.media.toFixed(2)}</strong></td><td>${p2?`<strong style="color:${valColor(p2.media)}">${p2.media.toFixed(2)}</strong>`:'<span class="badge badge-gray">Pendente</span>'}</td><td>${evo?`<span style="color:${parseFloat(evo)>=0?'#059669':'#DC2626'};font-weight:600">${parseFloat(evo)>=0?'+':''}${evo}</span>`:'—'}</td></tr>`;}).join('')}</tbody></table></div>`;
+  const pre=getAvalData('pre',fichaAtiva.id),pos=getAvalData('pos',fichaAtiva.id);
+  document.getElementById('aval-evolucao').innerHTML=`<div class="card">${pos.length===0?'<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">Pós-teste ainda não realizado.<br>Quando fizeres a segunda avaliação, a evolução aparece aqui.</div></div>':''}</div><div class="card"><div class="card-title">📈 Pré vs Pós-teste — ${fichaAtiva.nome}</div><table class="tbl"><thead><tr><th>Jogador</th><th>Pré-teste</th><th>Pós-teste</th><th>Evolução</th></tr></thead><tbody>${pre.map(d=>{const p2=pos.find(x=>x.nome===d.nome),evo=p2?(p2.media-d.media).toFixed(2):null;return`<tr><td>${d.nome}</td><td><strong style="color:${valColor(d.media)}">${d.media.toFixed(2)}</strong></td><td>${p2?`<strong style="color:${valColor(p2.media)}">${p2.media.toFixed(2)}</strong>`:'<span class="badge badge-gray">Pendente</span>'}</td><td>${evo?`<span style="color:${parseFloat(evo)>=0?'#059669':'#DC2626'};font-weight:600">${parseFloat(evo)>=0?'+':''}${evo}</span>`:'—'}</td></tr>`;}).join('')}</tbody></table></div>`;
 }
 
 // ═══ RELATÓRIO ═══
@@ -5166,12 +5640,13 @@ async function gerarPDFJogador(){
   const pre=DB.avaliacoes.find(d=>d.tipo==='pre'&&d.nome===j.nome);
   const pos=DB.avaliacoes.find(d=>d.tipo==='pos'&&d.nome.trim()===j.nome.trim());
   if(pre){
+    const preGestos = getGestosForAval(pre);
     checkY(20);
     doc.setDrawColor(...RED);doc.setLineWidth(0.5);doc.line(margin,y,W-margin,y);y+=5;
     doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(0,0,0);
     doc.text('Avaliacao Tecnica',margin,y);y+=5;
 
-    const cats=[...new Set(COMPS.map(c=>c.cat))];
+    const cats=[...new Set(preGestos.map(c=>c.cat))];
     const colW=cW/cats.length;
     cats.forEach((cat,ci)=>{
       doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...RED);
@@ -5183,13 +5658,13 @@ async function gerarPDFJogador(){
     }
     y+=4;
 
-    const maxRows=Math.max(...cats.map(cat=>COMPS.filter(c=>c.cat===cat).length));
+    const maxRows=Math.max(...cats.map(cat=>preGestos.filter(c=>c.cat===cat).length));
     for(let row=0;row<maxRows;row++){
       checkY(6);
       cats.forEach((cat,ci)=>{
-        const comps=COMPS.filter(c=>c.cat===cat);
+        const comps=preGestos.filter(c=>c.cat===cat);
         if(row>=comps.length)return;
-        const c=comps[row],i=COMPS.indexOf(c);
+        const c=comps[row],i=preGestos.indexOf(c);
         const cx=margin+ci*colW;
         const preV=pre.vals[i],posV=pos?pos.vals[i]:null;
         doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(0,0,0);
@@ -5228,8 +5703,8 @@ async function gerarPDFJogador(){
     doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(0,0,0);
     doc.text('Analise SWOT',margin,y);y+=5;
 
-    const forcas=COMPS.filter((_,i)=>pre.vals[i]>=4);
-    const fraquezas=COMPS.filter((_,i)=>pre.vals[i]<=2);
+    const forcas=preGestos.filter((_,i)=>pre.vals[i]>=4);
+    const fraquezas=preGestos.filter((_,i)=>pre.vals[i]<=2);
     const swotW=(cW-4)/2;
     const swotHf=Math.max(forcas.length,1)*4+14;
     const swotHw=Math.max(fraquezas.length,1)*4+14;
@@ -5301,8 +5776,9 @@ async function gerarRelatorioIA(jid){
   const mediaG=sess.length&&jogsDoGrupo(g).length?Math.round(jogsDoGrupo(g).reduce((a,x)=>a+statsJogador(x,sess).taxa,0)/jogsDoGrupo(g).length):0;
   const pre=DB.avaliacoes.find(d=>d.tipo==='pre'&&d.nome===j.nome);
   const pos=DB.avaliacoes.find(d=>d.tipo==='pos'&&d.nome===j.nome);
-  const forcas=pre?COMPS.filter((_,i)=>pre.vals[i]>=4).map(c=>c.label).join(', ')||'Nenhuma':'N/A';
-  const fraquezas=pre?COMPS.filter((_,i)=>pre.vals[i]<=2).map(c=>c.label).join(', ')||'Nenhuma':'N/A';
+  const preGestos2 = pre ? getGestosForAval(pre) : FICHA_LEGACY.gestos;
+  const forcas=pre?preGestos2.filter((_,i)=>pre.vals[i]>=4).map(c=>c.label).join(', ')||'Nenhuma':'N/A';
+  const fraquezas=pre?preGestos2.filter((_,i)=>pre.vals[i]<=2).map(c=>c.label).join(', ')||'Nenhuma':'N/A';
   const avalInfo=pre
     ?`Avaliação técnica pré-teste: média ${avg(pre.vals).toFixed(2)}/5.0 — Patinagem: ${avg(pre.vals.slice(0,12)).toFixed(2)}, Remate: ${avg(pre.vals.slice(12,16)).toFixed(2)}, Técnica de bola: ${avg(pre.vals.slice(16)).toFixed(2)}. ${pos?`Pós-teste: média ${avg(pos.vals).toFixed(2)}/5.0 (evolução ${(avg(pos.vals)-avg(pre.vals))>=0?'+':''}${(avg(pos.vals)-avg(pre.vals)).toFixed(2)}).`:'Pós-teste ainda não realizado.'} Forças: ${forcas}. Fraquezas: ${fraquezas}.`
     :'Sem avaliação técnica registada.';
